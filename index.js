@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import connectDB from './config/database.js';
 import authRoutes from './routes/auth.js';
@@ -103,11 +104,21 @@ app.use('/api/tickets', ticketRoutes);
 app.use('/api/solar-kits', solarKitRoutes);
 
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ message: 'Server is running' });
+  const dbStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';
+  res.status(200).json({ 
+    message: 'Server is running', 
+    database: dbStatus,
+    timestamp: new Date().toISOString() 
+  });
 });
 
 app.get('/', (req, res) => {
-  res.status(200).json({ message: 'Welcome to Solar ERP API', status: 'Running' });
+  const dbStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';
+  res.status(200).json({ 
+    message: 'Welcome to Solar ERP API', 
+    status: 'Running',
+    database: dbStatus
+  });
 });
 
 app.use((err, req, res, next) => {

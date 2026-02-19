@@ -38,7 +38,32 @@ Use this list to verify that your deployed server is working correctly.
 - **Inventory**: \`GET /api/inventory\`
 
 ## Verification Steps
-1. Open your Vercel URL (e.g., \`https://solar-server.vercel.app\`).
-2. You should see `{"message": "Welcome to Solar ERP API", "status": "Running"}`.
-3. Navigate to \`/api/health\`.
-4. Test a protected route (like \`/api/users\`) using Postman or curl with a valid JWT token.
+1. **Check Server & DB Status**:
+   - Open your Vercel URL (e.g., \`https://solar-server.vercel.app\`).
+   - You should see:
+     \`\`\`json
+     {
+       "message": "Welcome to Solar ERP API",
+       "status": "Running",
+       "database": "Connected"
+     }
+     \`\`\`
+   - If "database" says "Connected", your MongoDB connection is successful.
+   - If it says "Disconnected" or "Connecting", check your `MONGODB_URI` environment variable in Vercel.
+
+2. **Health Endpoint**:
+   - Navigate to \`/api/health\`.
+   - Response should include timestamp and DB status:
+     \`\`\`json
+     {
+       "message": "Server is running",
+       "database": "Connected",
+       "timestamp": "2024-..."
+     }
+     \`\`\`
+
+3. **Verify Data**:
+   - To verify data is actually coming from the DB, test a **GET** route like \`/api/products\` or \`/api/users/employees\`.
+   - **Note on Browser Testing**: Browsers always send **GET** requests when you type a URL.
+     - \`/api/auth/login\` is a **POST** route. Accessing it in the browser will result in \`Cannot GET /api/auth/login\`. This is **expected behavior**.
+     - To test login or other POST/PUT/DELETE methods, you must use a tool like **Postman**, **Thunder Client**, or your frontend application.
