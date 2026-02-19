@@ -106,6 +106,10 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ message: 'Server is running' });
 });
 
+app.get('/', (req, res) => {
+  res.status(200).json({ message: 'Welcome to Solar ERP API', status: 'Running' });
+});
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: 'Internal server error' });
