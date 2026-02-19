@@ -54,7 +54,49 @@ const app = express();
 
 // connectDB(); // Removed top-level call for serverless compatibility
 
-app.use(cors());
+// Configure CORS
+const allowedOrigins = [];
+
+// Production Frontend URL (from Env)
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
+// Local Development URL (from Env)
+if (process.env.DEV_FRONTEND_URL) {
+  allowedOrigins.push(process.env.DEV_FRONTEND_URL);
+}
+
+// Additional Allowed Origins (Comma separated)
+if (process.env.ALLOWED_ORIGINS) {
+  process.env.ALLOWED_ORIGINS.split(',').forEach(origin => {
+    allowedOrigins.push(origin.trim());
+  });
+}
+
+// Fallback for local development if env vars are missing (optional security net)
+if (allowedOrigins.length === 0 && process.env.NODE_ENV !== 'production') {
+  console.log('No CORS origins configured in Env, defaulting to common local ports.');
+  allowedOrigins.push('http://localhost:5173');
+  allowedOrigins.push('http://localhost:3000');
+}
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('Blocked by CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 

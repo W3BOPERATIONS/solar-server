@@ -14,7 +14,9 @@ You must set the following environment variables in your Vercel project settings
 
 - \`MONGODB_URI\`: Your MongoDB connection string.
 - \`JWT_SECRET\`: Your JWT secret key.
-- \`PORT\`: (Optional, Vercel handles this, but good to have)
+- \`FRONTEND_URL\`: The URL of your deployed frontend (e.g., \`https://solarkits-sigma.vercel.app\`).
+- \`ALLOWED_ORIGINS\`: (Optional) Comma-separated list of additional allowed origins.
+- \`PORT\`: (Optional, Vercel handles this)
 - Any other variables from your local \`.env\` file.
 
 ## Deployment Steps
