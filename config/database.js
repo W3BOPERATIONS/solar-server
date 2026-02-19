@@ -10,7 +10,6 @@ const connectDB = async () => {
 
   try {
     const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      dbName: "solar-erp",
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
