@@ -4,7 +4,7 @@ const franchiseeRewardSchema = new mongoose.Schema(
     {
         type: {
             type: String,
-            enum: ['product', 'experience', 'project_point'],
+            enum: ['product', 'experience', 'project_point', 'redeem_setting'],
             required: true
         },
         name: { // For product/experience

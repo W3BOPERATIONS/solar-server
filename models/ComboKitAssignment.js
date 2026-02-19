@@ -1,54 +1,69 @@
 import mongoose from 'mongoose';
 
 const comboKitAssignmentSchema = new mongoose.Schema({
-    comboKitId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'SolarKit', // Or BundlePlan? User said "ComboKit" which implies SolarKit + others. 
-        // The UI "AddComboKitForFranchisee" likely assigns a SolarKit or Bundle.
-        // I will assume it references SolarKit primarily or Bundle. 
-        // Let's use generic name or SolarKit for now, can be updated.
-        required: true
-    },
-    userType: {
-        type: String,
-        enum: ['Franchisee', 'Dealer'],
-        required: true
-    },
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: false // Might be assigning to a region, not specific user yet? 
-        // Or specific user. Let's keep optional for now if allowed.
-    },
-    // Location Hierarchy - Setup Locations
     state: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'State',
         required: true
     },
-    city: {
+    cluster: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'City',
+        ref: 'Cluster',
         required: true
     },
-    district: {
+    // The frontend sends an array of district IDs.
+    // The user might be assigning this project to multiple districts.
+    districts: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'District',
-        required: true
+        ref: 'District'
+    }],
+    cpTypes: [{
+        type: String
+    }],
+    comboKits: [{
+        name: String,
+        image: String,
+        panelBrand: String,
+        panelSkus: [String],
+        inverterBrand: String
+    }],
+    // New fields for customization
+    solarkitName: {
+        type: String,
+        default: "Solarkit Name"
     },
-    price: {
-        type: Number,
-        default: 0
+    panels: [{
+        type: String
+    }],
+    inverters: [{
+        type: String
+    }],
+    boskits: [{
+        type: String
+    }],
+    category: {
+        type: String,
+        default: 'Solar Panel'
+    },
+    subCategory: {
+        type: String,
+        default: 'Residential'
+    },
+    projectType: {
+        type: String,
+        default: '1kw-10kw'
+    },
+    subProjectType: {
+        type: String,
+        default: 'On Grid'
     },
     status: {
         type: String,
         enum: ['Active', 'Inactive'],
-        default: 'Active'
-    },
-    createdBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        default: 'Inactive'
     }
 }, { timestamps: true });
 
-export default mongoose.model('ComboKitAssignment', comboKitAssignmentSchema);
+const ComboKitAssignment = mongoose.model('ComboKitAssignment', comboKitAssignmentSchema);
+
+export default ComboKitAssignment;

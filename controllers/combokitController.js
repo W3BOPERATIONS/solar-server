@@ -4,6 +4,9 @@ import AMCService from '../models/AMCService.js';
 import BundlePlan from '../models/BundlePlan.js';
 import ComboKitAssignment from '../models/ComboKitAssignment.js';
 import CustomizedComboKit from '../models/CustomizedComboKit.js';
+import State from '../models/State.js';
+import Cluster from '../models/Cluster.js';
+import District from '../models/District.js';
 
 // --- SolarKit Controllers ---
 
@@ -254,29 +257,44 @@ export const createAssignment = async (req, res) => {
 
 export const getAssignments = async (req, res) => {
     try {
-        const { userType, state, city, district } = req.query;
+        const { state, cluster } = req.query;
         const filter = {};
-        if (userType) filter.userType = userType;
         if (state) filter.state = state;
-        if (city) filter.city = city;
-        if (district) filter.district = district;
+        if (cluster) filter.cluster = cluster;
 
         const assignments = await ComboKitAssignment.find(filter)
-            .populate('comboKitId', 'name')
             .populate('state', 'name')
-            .populate('city', 'name')
-            .populate('district', 'name');
+            .populate('cluster', 'name')
+            .populate('districts', 'name');
         res.status(200).json(assignments);
     } catch (error) {
+        console.error("Error fetching assignments:", error);
         res.status(500).json({ message: error.message });
     }
 };
 
 export const updateAssignment = async (req, res) => {
     try {
+        // Sanitize comboKits to remove temporary frontend IDs
+        if (req.body.comboKits && Array.isArray(req.body.comboKits)) {
+            req.body.comboKits = req.body.comboKits.map(kit => {
+                const newKit = { ...kit };
+                // If id is present and not a valid 24-char hex ObjectId, remove it
+                if (newKit.id && !/^[0-9a-fA-F]{24}$/.test(newKit.id)) {
+                    delete newKit.id;
+                }
+                return newKit;
+            });
+        }
+
         const updatedAssignment = await ComboKitAssignment.findByIdAndUpdate(req.params.id, req.body, { new: true });
+
+        if (!updatedAssignment) {
+            return res.status(404).json({ message: "Assignment not found" });
+        }
         res.status(200).json(updatedAssignment);
     } catch (error) {
+        console.error("Error updating assignment:", error);
         res.status(500).json({ message: error.message });
     }
 };
