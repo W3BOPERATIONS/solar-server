@@ -1,11 +1,9 @@
 import mongoose from 'mongoose';
 
-let isConnected = false; // Track connection status
-
 const connectDB = async () => {
   mongoose.set('strictQuery', true);
 
-  if (isConnected) {
+  if (mongoose.connection.readyState >= 1) {
     console.log('MongoDB is already connected');
     return;
   }
@@ -16,8 +14,6 @@ const connectDB = async () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-
-    isConnected = conn.connections[0].readyState;
 
     console.log(`MongoDB connected: ${conn.connection.host}`);
   } catch (error) {
