@@ -87,6 +87,11 @@ const inventoryItemSchema = new mongoose.Schema(
             ref: 'User',
             default: null,
         },
+        dealerId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            default: null,
+        },
         updatedBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',

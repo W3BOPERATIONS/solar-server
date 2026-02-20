@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['admin', 'dealer', 'franchisee', 'delivery_manager', 'installer', 'employee'], // Added employee for dynamic roles
+      enum: ['admin', 'dealer', 'franchisee', 'dealerManager', 'franchiseeManager', 'delivery_manager', 'installer', 'employee'], // Added employee for dynamic roles
       default: 'dealer',
     },
     dynamicRole: {

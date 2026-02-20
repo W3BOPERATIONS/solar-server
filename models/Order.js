@@ -36,6 +36,11 @@ const orderSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    dealerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
     customer: {
       name: String,
       email: String,
