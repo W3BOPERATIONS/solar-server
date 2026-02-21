@@ -47,6 +47,8 @@ import surveyRoutes from './routes/surveyRoutes.js';
 import commissionRoutes from './routes/dealer/commissionRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
 import solarKitRoutes from './routes/solarKitRoutes.js';
+import dealerManagerRoutes from './routes/dealerManagerRoutes.js';
+import disputeRoutes from './routes/disputeRoutes.js';
 
 dotenv.config();
 
@@ -85,7 +87,7 @@ app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
+
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -144,20 +146,22 @@ app.use('/api/surveys', surveyRoutes);
 app.use('/api/dealer/commission', commissionRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/solar-kits', solarKitRoutes);
+app.use('/api/dealer-manager', dealerManagerRoutes);
+app.use('/api/disputes', disputeRoutes);
 
 app.get('/api/health', (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';
-  res.status(200).json({ 
-    message: 'Server is running', 
+  res.status(200).json({
+    message: 'Server is running',
     database: dbStatus,
-    timestamp: new Date().toISOString() 
+    timestamp: new Date().toISOString()
   });
 });
 
 app.get('/', (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';
-  res.status(200).json({ 
-    message: 'Welcome to Solar ERP API', 
+  res.status(200).json({
+    message: 'Welcome to Solar ERP API',
     status: 'Running',
     database: dbStatus
   });

@@ -1,6 +1,7 @@
 import Project from '../models/Project.js';
 import State from '../models/State.js';
 import Cluster from '../models/Cluster.js';
+import User from '../models/User.js';
 
 // ==================== PROJECT CONTROLLERS ====================
 
@@ -19,7 +20,14 @@ export const getAllProjects = async (req, res, next) => {
 
         const query = { isActive: true };
 
-        if (status && status !== 'all') query.statusStage = status;
+        // Role-based filtering logic
+        if (req.user && req.user.role === 'dealerManager') {
+            const managerDealers = await User.find({ role: 'dealer', createdBy: req.user.id });
+            const dealerIds = managerDealers.map(d => d._id);
+            query.dealerId = { $in: [req.user.id, ...dealerIds] };
+        } else if (req.user && req.user.role === 'dealer') {
+            query.dealerId = req.user.id;
+        } if (status && status !== 'all') query.statusStage = status;
         if (cp && cp !== 'all') query.cp = cp;
         if (districtId && districtId !== 'all') query.district = districtId;
         if (stateId) query.state = stateId;
@@ -81,6 +89,15 @@ export const getProjectStats = async (req, res, next) => {
         const { stateId } = req.query;
         const query = { isActive: true };
         if (stateId) query.state = stateId;
+
+        // Role-based filtering logic
+        if (req.user && req.user.role === 'dealerManager') {
+            const managerDealers = await User.find({ role: 'dealer', createdBy: req.user.id });
+            const dealerIds = managerDealers.map(d => d._id);
+            query.dealerId = { $in: [req.user.id, ...dealerIds] };
+        } else if (req.user && req.user.role === 'dealer') {
+            query.dealerId = req.user.id;
+        }
 
         const allProjects = await Project.find(query);
 

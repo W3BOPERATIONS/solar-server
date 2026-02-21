@@ -1,0 +1,17 @@
+{
+  "errors": {
+    "state": {
+      "stringValue": "\"Gujarat\"",
+      "valueType": "string",
+      "kind": "ObjectId",
+      "value": "Gujarat",
+      "path": "state",
+      "reason": {},
+      "name": "CastError",
+      "message": "Cast to ObjectId failed for value \"Gujarat\" (type string) at path \"state\" because of \"BSONError\""
+    }
+  },
+  "_message": "Project validation failed",
+  "name": "ValidationError",
+  "message": "Project validation failed: state: Cast to ObjectId failed for value \"Gujarat\" (type string) at path \"state\" because of \"BSONError\""
+}

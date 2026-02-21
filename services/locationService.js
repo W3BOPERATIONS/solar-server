@@ -15,8 +15,9 @@ class LocationService {
      * Get clusters by state
      */
     async getClustersByState(stateId) {
-        if (!stateId) return [];
-        return await Cluster.find({ state: stateId, isActive: true }).sort({ name: 1 });
+        const query = { isActive: true };
+        if (stateId) query.state = stateId;
+        return await Cluster.find(query).sort({ name: 1 });
     }
 
     /**

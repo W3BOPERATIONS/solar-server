@@ -108,6 +108,15 @@ const projectSchema = new mongoose.Schema(
       trim: true
     },
 
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product',
+      default: null,
+    },
+    installationDate: {
+      type: Date,
+    },
+
     isActive: {
       type: Boolean,
       default: true,

@@ -10,7 +10,7 @@ const ticketSchema = new mongoose.Schema(
         project: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Project',
-            required: true,
+            required: false, // User requested unlinking ticket assignment for random unassigned cases
         },
         user: { // The dealer or user who raised the ticket
             type: mongoose.Schema.Types.ObjectId,

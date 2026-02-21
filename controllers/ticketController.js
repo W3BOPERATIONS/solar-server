@@ -22,21 +22,24 @@ export const createTicket = async (req, res) => {
             media // Array of URLs if any
         } = req.body;
 
-        // Verify project exists
-        const project = await Project.findById(projectId);
-        if (!project) {
-            return res.status(404).json({ message: 'Project not found' });
+        let project = null;
+        if (projectId) {
+            // Verify project exists if a projectId was provided
+            project = await Project.findById(projectId);
+            if (!project) {
+                return res.status(404).json({ message: 'Project not found' });
+            }
         }
 
         const ticketId = await generateTicketId();
 
         const newTicket = new Ticket({
             ticketId,
-            project: projectId,
+            project: projectId || null,
             user: req.user.id, // Assumes auth middleware populates req.user
-            customerName: project.projectName || 'Unknown', // Or fetch from Lead/User if linked differently
-            customerPhone: project.mobile || '',
-            customerEmail: project.email || '',
+            customerName: project ? project.projectName : 'Unknown', // Or fetch from Lead/User if linked differently
+            customerPhone: project ? project.mobile : 'Unknown',
+            customerEmail: project ? project.email : '',
             issueType,
             component,
             description,
@@ -63,19 +66,41 @@ export const getAllTickets = async (req, res) => {
         let query = {};
 
         // Filter by user role if needed (e.g., dealers see only their tickets)
-        // For now, let's assume if it's a dealer, they see their own tickets
         if (req.user && req.user.role === 'dealer') {
             query.user = req.user.id;
+        } else if (req.user && req.user.role === 'dealerManager') {
+            const User = (await import('../models/User.js')).default;
+            const myDealers = await User.find({ role: 'dealer', createdBy: req.user.id }).select('_id');
+            const dealerIds = myDealers.map(d => d._id);
+
+            const Project = (await import('../models/Project.js')).default;
+            const myProjects = await Project.find({ dealerId: { $in: dealerIds } }).select('_id');
+            const projectIds = myProjects.map(p => p._id);
+
+            const rbacCondition = {
+                $or: [
+                    { user: { $in: [...dealerIds, req.user.id] } },
+                    { project: { $in: projectIds } }
+                ]
+            };
+
+            if (!query.$and) query.$and = [];
+            query.$and.push(rbacCondition);
         }
 
         if (status) query.status = status;
         if (priority) query.priority = priority;
         if (search) {
-            query.$or = [
-                { ticketId: { $regex: search, $options: 'i' } },
-                { customerName: { $regex: search, $options: 'i' } },
-                { issueType: { $regex: search, $options: 'i' } },
-            ];
+            const searchCondition = {
+                $or: [
+                    { ticketId: { $regex: search, $options: 'i' } },
+                    { customerName: { $regex: search, $options: 'i' } },
+                    { issueType: { $regex: search, $options: 'i' } },
+                ]
+            };
+
+            if (!query.$and) query.$and = [];
+            query.$and.push(searchCondition);
         }
 
         const tickets = await Ticket.find(query)

@@ -10,13 +10,24 @@ const getPerformanceData = async (req, res, roleFilter) => {
     try {
         const { stateId, clusterId, districtId, countryId, timeline, userType } = req.query;
 
-        console.log(`🚀[Dynamic Performance] Fetching real - time data for role: ${roleFilter} `);
+        console.log(`🚀 [Dynamic Performance API] Fetching real-time data for role: ${roleFilter}`);
         console.log("✅ Database connected successfully");
-        console.log("✅ Admin connected to Dealer collections");
+        if (req.user && req.user.role === 'dealerManager') {
+            console.log(`✅ [Dealer Manager] Fetching dealers onboarded by manager ID: ${req.user.id}`);
+        } else {
+            console.log("✅ Admin connected to Dealer collections");
+        }
         console.log("🔄 Dealer update event triggered");
 
         let userFilter = { role: roleFilter || 'dealer' };
         if (userType) userFilter.role = userType;
+
+        // Scope data to the manager who is requesting it
+        if (req.user && req.user.role === 'dealerManager' && roleFilter === 'dealer') {
+            userFilter.createdBy = req.user.id;
+        } else if (req.user && req.user.role === 'franchiseeManager' && roleFilter === 'franchisee') {
+            userFilter.createdBy = req.user.id;
+        }
 
         let commonFilter = {};
         if (stateId && mongoose.Types.ObjectId.isValid(stateId)) commonFilter.state = new mongoose.Types.ObjectId(stateId);

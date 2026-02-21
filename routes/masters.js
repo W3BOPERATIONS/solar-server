@@ -7,6 +7,8 @@ import * as categoryController from '../controllers/categoryController.js';
 import * as unitController from '../controllers/unitController.js';
 import * as skuController from '../controllers/skuController.js';
 import * as priceMasterController from '../controllers/priceMasterController.js';
+import * as subCategoryController from '../controllers/subCategoryController.js';
+import * as subProjectTypeController from '../controllers/subProjectTypeController.js';
 import {
     BRAND,
     DEPARTMENT,
@@ -30,6 +32,18 @@ router.get('/categories', categoryController.getAllCategories);
 router.post('/categories', protect, categoryController.createCategory);
 router.put('/categories/:id', protect, categoryController.updateCategory);
 router.delete('/categories/:id', protect, categoryController.deleteCategory);
+
+// --- Sub Categories ---
+router.get('/sub-categories', subCategoryController.getAllSubCategories);
+router.post('/sub-categories', protect, subCategoryController.createSubCategory);
+router.put('/sub-categories/:id', protect, subCategoryController.updateSubCategory);
+router.delete('/sub-categories/:id', protect, subCategoryController.deleteSubCategory);
+
+// --- Sub Project Types ---
+router.get('/sub-project-types', subProjectTypeController.getAllSubProjectTypes);
+router.post('/sub-project-types', protect, subProjectTypeController.createSubProjectType);
+router.put('/sub-project-types/:id', protect, subProjectTypeController.updateSubProjectType);
+router.delete('/sub-project-types/:id', protect, subProjectTypeController.deleteSubProjectType);
 
 // --- Units ---
 router.get('/units', unitController.getAllUnits);

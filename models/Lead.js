@@ -20,6 +20,9 @@ const leadSchema = new mongoose.Schema(
             type: String,
             trim: true
         },
+        state: {
+            type: String
+        },
         district: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'District',
@@ -44,9 +47,18 @@ const leadSchema = new mongoose.Schema(
             type: Number,
             default: 0
         },
+        rural: {
+            type: String
+        },
+        sourceOfMedia: {
+            type: String
+        },
+        profession: {
+            type: String
+        },
         status: {
             type: String,
-            enum: ['New', 'SurveyPending', 'SurveyCompleted', 'QuoteGenerated', 'ProjectStart', 'ProjectSigned'],
+            enum: ['New', 'SurveyPending', 'SurveyCompleted', 'QuoteGenerated', 'ProjectStart', 'ProjectSigned', 'Converted'],
             default: 'New'
         },
         dealer: {
