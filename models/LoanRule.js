@@ -29,8 +29,7 @@ const loanRuleSchema = new mongoose.Schema({
     },
     clusterId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Cluster',
-        required: true
+        ref: 'Cluster'
     },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,

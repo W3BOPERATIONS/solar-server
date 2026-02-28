@@ -13,17 +13,42 @@ const solarKitSchema = new mongoose.Schema({
     products: [{
         type: String
     }],
+    category: {
+        type: String,
+        default: 'Solar Panel'
+    },
+    subCategory: {
+        type: String,
+        default: 'Residential'
+    },
+    projectType: {
+        type: String,
+        default: '1kW - 10kW'
+    },
+    subProjectType: {
+        type: String,
+        default: 'On Grid'
+    },
     bom: [{
-        title: String,
+        bosKitName: String,
+        kitType: {
+            type: String,
+            enum: ['CP', 'Combokit'],
+            default: 'Combokit'
+        },
+        kitCategory: String,
         items: [{
             name: String,
+            itemType: String,
             qty: String,
-            unit: String
+            unit: String,
+            price: Number
         }]
     }],
     status: {
-        type: Boolean,
-        default: true
+        type: String,
+        enum: ['Active', 'Inactive'],
+        default: 'Inactive'
     }
 }, {
     timestamps: true,

@@ -7,21 +7,11 @@ const zoneSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    code: {
-      type: String,
-      sparse: true,
-      trim: true,
-    },
-    cluster: {
+    clusters: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Cluster',
       required: true,
-    },
-    district: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'District',
-      required: true,
-    },
+    }],
     state: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'State',
@@ -31,10 +21,6 @@ const zoneSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Country',
       required: true,
-    },
-    description: {
-      type: String,
-      default: '',
     },
     isActive: {
       type: Boolean,
@@ -56,7 +42,7 @@ const zoneSchema = new mongoose.Schema(
   }
 );
 
-// Compound index for unique zone per cluster
-zoneSchema.index({ name: 1, cluster: 1 }, { unique: true });
+// Compound index for unique zone name within a state
+zoneSchema.index({ name: 1, state: 1 }, { unique: true });
 
 export default mongoose.model('Zone', zoneSchema);

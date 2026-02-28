@@ -39,7 +39,8 @@ const hrmsSettingsSchema = new mongoose.Schema({
     },
     recruitment: {
         probation: { type: String, default: '' },
-        training: { type: String, default: '' }
+        training: { type: String, default: '' },
+        payrollType: { type: String, default: 'monthly' }
     },
     performance: {
         efficiencyFormula: { type: String, default: '' },
@@ -48,7 +49,12 @@ const hrmsSettingsSchema = new mongoose.Schema({
         overdueImpact: { type: String, default: '' },
         productivity: { type: String, default: '' },
         breakTime: { type: String, default: '' },
-        idealTime: { type: String, default: '' }
+        idealTime: { type: String, default: '' },
+        payrollType: { type: String, default: 'monthly' },
+        efficiencyDecreaseGrid: [{
+            range: { type: String },
+            decrease: { type: String }
+        }]
     },
     vacancy: {
         count: { type: String, default: '' },
@@ -60,6 +66,9 @@ const hrmsSettingsSchema = new mongoose.Schema({
         jobType: { type: String, default: 'fulltime' },
         description: { type: String, default: '' },
         responsibilities: { type: String, default: '' }
+    },
+    test: {
+        selectedTests: [{ type: String }]
     },
     isActive: {
         type: Boolean,

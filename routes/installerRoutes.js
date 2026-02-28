@@ -8,14 +8,18 @@ import {
     createInstallerTool,
     updateInstallerTool,
     deleteInstallerTool,
-    getInstallationRates,
-    createInstallationRate,
-    updateInstallationRate,
-    deleteInstallationRate,
+    getInstallerRatings,
+    createInstallerRating,
+    updateInstallerRating,
+    deleteInstallerRating,
     getInstallerAgencies,
     createInstallerAgency,
     updateInstallerAgency,
-    deleteInstallerAgency
+    deleteInstallerAgency,
+    getInstallerAgencyPlans,
+    createInstallerAgencyPlan,
+    updateInstallerAgencyPlan,
+    deleteInstallerAgencyPlan
 } from '../controllers/installerController.js';
 
 const router = express.Router();
@@ -32,16 +36,22 @@ router.post('/tools', createInstallerTool);
 router.put('/tools/:id', updateInstallerTool);
 router.delete('/tools/:id', deleteInstallerTool);
 
-// Installation Rates
-router.get('/rates', getInstallationRates);
-router.post('/rates', createInstallationRate);
-router.put('/rates/:id', updateInstallationRate);
-router.delete('/rates/:id', deleteInstallationRate);
+// Installer Ratings
+router.get('/ratings', getInstallerRatings);
+router.post('/ratings', createInstallerRating);
+router.put('/ratings/:id', updateInstallerRating);
+router.delete('/ratings/:id', deleteInstallerRating);
 
 // Installer Agencies
 router.get('/agencies', getInstallerAgencies);
 router.post('/agencies', createInstallerAgency);
 router.put('/agencies/:id', updateInstallerAgency);
 router.delete('/agencies/:id', deleteInstallerAgency);
+
+// Installer Agency Plans
+router.get('/agency-plans', getInstallerAgencyPlans);
+router.post('/agency-plans', createInstallerAgencyPlan);
+router.put('/agency-plans/:id', updateInstallerAgencyPlan);
+router.delete('/agency-plans/:id', deleteInstallerAgencyPlan);
 
 export default router;

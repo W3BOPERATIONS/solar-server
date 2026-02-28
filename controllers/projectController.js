@@ -86,9 +86,13 @@ export const getAllProjects = async (req, res, next) => {
 
 export const getProjectStats = async (req, res, next) => {
     try {
-        const { stateId } = req.query;
+        const { stateId, category, projectType, subCategory, subProjectType } = req.query;
         const query = { isActive: true };
         if (stateId) query.state = stateId;
+        if (category && category !== 'all' && category !== '') query.category = category;
+        if (projectType && projectType !== 'all' && projectType !== '') query.projectType = projectType;
+        if (subCategory && subCategory !== 'all' && subCategory !== '') query.subCategory = subCategory;
+        if (subProjectType && subProjectType !== 'all' && subProjectType !== '') query.subProjectType = subProjectType;
 
         // Role-based filtering logic
         if (req.user && req.user.role === 'dealerManager') {
@@ -122,10 +126,15 @@ export const getProjectStats = async (req, res, next) => {
         const today = new Date();
         const overdueCount = allProjects.filter(p => {
             const due = new Date(p.dueDate);
-            return due < today && !['commission', 'subsidydis', 'completed'].includes(p.statusStage); // Overdue if not completed and date passed
+            return due < today && !['commission', 'subsidydis', 'completed'].includes(p.statusStage);
         }).length;
 
-
+        // Stage-wise counts breakdown
+        const stageCounts = allProjects.reduce((acc, p) => {
+            const stage = p.statusStage || 'unknown';
+            acc[stage] = (acc[stage] || 0) + 1;
+            return acc;
+        }, {});
 
         res.json({
             success: true,
@@ -133,7 +142,8 @@ export const getProjectStats = async (req, res, next) => {
                 total,
                 inProgress: inProgressCount,
                 completed: completedCount,
-                overdue: overdueCount
+                overdue: overdueCount,
+                stageCounts // New field with breakdown
             }
         });
 

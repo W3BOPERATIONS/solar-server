@@ -20,6 +20,9 @@ const comboKitAssignmentSchema = new mongoose.Schema({
     cpTypes: [{
         type: String
     }],
+    role: {
+        type: String
+    },
     comboKits: [{
         name: String,
         image: String,

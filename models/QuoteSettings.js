@@ -21,7 +21,11 @@ const quoteSettingsSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    cpType: {
+    partnerType: {
+        type: String,
+        required: true
+    },
+    planType: {
         type: String,
         required: true
     },

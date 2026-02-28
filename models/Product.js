@@ -12,32 +12,92 @@ const productSchema = new mongoose.Schema(
       ref: 'Category',
       required: true,
     },
+    subCategoryId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'SubCategory',
+      required: false,
+    },
+    subProjectTypeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'SubProjectType',
+      required: false,
+    },
+    projectTypeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'ProjectType',
+      required: false,
+    },
+    brandId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'BrandManufacturer',
+      required: false,
+    },
     unitId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Unit',
-      required: true,
+      required: false,
     },
     skuId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'SKU',
-      required: true,
-      unique: true, // One Product per SKU definition essentially
+      required: false,
     },
     // Location Hierarchy
     stateId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'State',
-      required: true
+      required: false
     },
     cityId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'City',
-      required: true
+      required: false
     },
     districtId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'District',
-      required: true
+      required: false
+    },
+    clusterId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Cluster',
+      required: false
+    },
+    serialNo: {
+      type: String,
+      default: ''
+    },
+    subtype: {
+      type: String,
+      default: 'On-Grid'
+    },
+    technology: {
+      type: String,
+      default: 'Mono-Perc'
+    },
+    tolerance: {
+      type: String,
+      default: '+/- 3%'
+    },
+    dcr: {
+      type: String,
+      default: 'DCR'
+    },
+    datasheet: {
+      type: String,
+      default: ''
+    },
+    mechanicalParameters: {
+      type: [String],
+      default: []
+    },
+    electricalParameters: {
+      type: [String],
+      default: []
+    },
+    skuParameters: {
+      type: [String],
+      default: []
     },
     description: {
       type: String,

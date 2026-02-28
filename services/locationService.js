@@ -2,6 +2,7 @@ import State from '../models/State.js';
 import Cluster from '../models/Cluster.js';
 import District from '../models/District.js';
 import City from '../models/City.js';
+import Zone from '../models/Zone.js';
 
 class LocationService {
     /**
@@ -9,6 +10,24 @@ class LocationService {
      */
     async getStates() {
         return await State.find({ isActive: true }).sort({ name: 1 });
+    }
+
+    /**
+     * Get districts by state
+     */
+    async getDistrictsByState(stateId) {
+        const query = { isActive: true };
+        if (stateId) query.state = stateId;
+        return await District.find(query).sort({ name: 1 });
+    }
+
+    /**
+     * Get clusters by district
+     */
+    async getClustersByDistrict(districtId) {
+        const query = { isActive: true };
+        if (districtId) query.districts = districtId; // Mongoose handles ID in array automatically
+        return await Cluster.find(query).sort({ name: 1 });
     }
 
     /**
@@ -22,44 +41,51 @@ class LocationService {
 
     /**
      * Get districts by cluster
-     * Note: In the current model, a Cluster belongs to a District.
-     * This returns the specific district for the cluster.
      */
     async getDistrictsByCluster(clusterId) {
-        if (!clusterId) return [];
-        const cluster = await Cluster.findById(clusterId).populate('district');
-        if (!cluster || !cluster.district) return [];
-
-        // We return an array to keep it consistent with other "getMany" style APIs
-        // Even if it's currently 1-to-1 in this direction.
-        return [cluster.district];
+        const cluster = await Cluster.findById(clusterId);
+        if (!cluster) return [];
+        return await District.find({ _id: { $in: cluster.districts }, isActive: true }).sort({ name: 1 });
     }
 
     /**
-     * Get cities by district
-     * Note: In the current model, a District belongs to a City.
+     * Get zones by cluster
      */
-    async getCitiesByDistrict(districtId) {
-        if (!districtId) return [];
-        const district = await District.findById(districtId).populate('city');
-        if (!district || !district.city) return [];
+    async getZonesByCluster(clusterId) {
+        const query = { isActive: true };
+        if (clusterId) query.clusters = clusterId;
+        return await Zone.find(query).sort({ name: 1 });
+    }
 
-        return [district.city];
+    /**
+     * Get cities by zone
+     */
+    async getCitiesByZone(zoneId) {
+        const query = { isActive: true };
+        if (zoneId) query.zones = zoneId;
+        return await City.find(query).sort({ name: 1 });
     }
 
     /**
      * Helper to validate if a location exists and follows the hierarchy
      */
-    async validateHierarchy(stateId, clusterId, districtId, cityId) {
+    async validateHierarchy(stateId, districtId, clusterId, zoneId) {
         if (stateId) {
             const state = await State.findById(stateId);
             if (!state) throw new Error('Invalid State');
         }
+        if (districtId) {
+            const district = await District.findById(districtId);
+            if (!district || district.state.toString() !== stateId) throw new Error('Invalid District for selected State');
+        }
         if (clusterId) {
             const cluster = await Cluster.findById(clusterId);
-            if (!cluster || cluster.state.toString() !== stateId) throw new Error('Invalid Cluster for selected State');
+            if (!cluster || !cluster.districts.includes(districtId)) throw new Error('Invalid Cluster for selected District');
         }
-        // Add more validation if needed
+        if (zoneId) {
+            const zone = await Zone.findById(zoneId);
+            if (!zone || !zone.clusters.includes(clusterId)) throw new Error('Invalid Zone for selected Cluster');
+        }
         return true;
     }
 }

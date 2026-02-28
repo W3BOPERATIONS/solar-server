@@ -15,6 +15,11 @@ import {
     getVendorDashboardMetrics,
     getVendorOrders
 } from '../controllers/vendorController.js';
+import {
+    getInstallerVendorPlans,
+    saveInstallerVendorPlan,
+    deleteInstallerVendorPlan
+} from '../controllers/installerVendorPlanController.js';
 import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -49,5 +54,13 @@ router.route('/supplier-vendors/:id')
 // Dashboard Routes
 router.get('/dashboard-metrics', protect, getVendorDashboardMetrics);
 router.get('/orders', protect, getVendorOrders);
+
+// Installer Vendor Plan Routes
+router.route('/installer-vendor-plans')
+    .get(getInstallerVendorPlans)
+    .post(protect, saveInstallerVendorPlan);
+
+router.route('/installer-vendor-plans/:id')
+    .delete(protect, deleteInstallerVendorPlan);
 
 export default router;

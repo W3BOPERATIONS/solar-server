@@ -20,17 +20,35 @@ const leadSchema = new mongoose.Schema(
             type: String,
             trim: true
         },
+        country: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Country',
+            default: null
+        },
         state: {
-            type: String
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'State',
+            default: null
+        },
+        city: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'City',
+            default: null
         },
         district: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'District',
-            required: true
+            default: null
         },
-        city: {
+        cluster: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Cluster' // Using Cluster as City based on frontend usage
+            ref: 'Cluster',
+            default: null
+        },
+        zone: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Zone',
+            default: null
         },
         solarType: {
             type: String,

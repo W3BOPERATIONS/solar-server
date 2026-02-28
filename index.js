@@ -49,6 +49,7 @@ import ticketRoutes from './routes/ticketRoutes.js';
 import solarKitRoutes from './routes/solarKitRoutes.js';
 import dealerManagerRoutes from './routes/dealerManagerRoutes.js';
 import disputeRoutes from './routes/disputeRoutes.js';
+import orderProcurementSettingRoutes from './routes/orderProcurementSettingRoutes.js';
 
 dotenv.config();
 
@@ -148,6 +149,7 @@ app.use('/api/tickets', ticketRoutes);
 app.use('/api/solar-kits', solarKitRoutes);
 app.use('/api/dealer-manager', dealerManagerRoutes);
 app.use('/api/disputes', disputeRoutes);
+app.use('/api/settings/order-procurement', orderProcurementSettingRoutes);
 
 app.get('/api/health', (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';

@@ -1,0 +1,48 @@
+﻿node : file:///C:/Users/
+alisp/OneDrive/Desktop/s
+olar/server/index.js:31
+At line:1 char:1
++ node index.js > 
+error.log 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo      
+        : NotSpecified  
+  : (file:///C:/User.   
+ ..ver/index.js:31:S    
+tring) [], RemoteEx    
+ception
+    + FullyQualifiedErr 
+   orId : NativeComman  
+  dError
+ 
+import 
+approvalOverdueRoutes 
+from './routes/approvalO
+verdueRoutes.js';
+       
+^^^^^^^^^^^^^^^^^^^^^
+SyntaxError: The 
+requested module './rout
+es/approvalOverdueRoutes
+.js' does not provide 
+an export named 
+'default'
+    at 
+ModuleJob._instantiate (
+node:internal/modules/es
+m/module_job:220:21)
+    at async 
+ModuleJob.run (node:inte
+rnal/modules/esm/module_
+job:321:5)
+    at async onImport.tr
+acePromise.__proto__ (no
+de:internal/modules/esm/
+loader:644:26)
+    at async asyncRunEnt
+ryPointWithESMLoader (no
+de:internal/modules/run_
+main:117:5)
+
+Node.js v22.17.0

@@ -14,6 +14,16 @@ const unitSchema = new mongoose.Schema(
             unique: true,
             trim: true,
         },
+        unitType: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        description: {
+            type: String,
+            default: '',
+            trim: true,
+        },
         status: {
             type: Boolean,
             default: true,

@@ -15,12 +15,14 @@ export const getAllUnits = async (req, res, next) => {
 
 export const createUnit = async (req, res, next) => {
     try {
-        const { unitName, symbol } = req.body;
-        if (!unitName || !symbol) return res.status(400).json({ success: false, message: 'Name and Symbol are required' });
+        const { unitName, symbol, unitType, description } = req.body;
+        if (!unitName || !symbol || !unitType) return res.status(400).json({ success: false, message: 'Name, Symbol, and Unit Type are required' });
 
         const unit = await Unit.create({
             unitName,
             symbol,
+            unitType,
+            description,
             createdBy: req.user?._id
         });
 
@@ -32,11 +34,11 @@ export const createUnit = async (req, res, next) => {
 
 export const updateUnit = async (req, res, next) => {
     try {
-        const { unitName, symbol, status } = req.body;
+        const { unitName, symbol, unitType, description, status } = req.body;
 
         const unit = await Unit.findByIdAndUpdate(
             req.params.id,
-            { unitName, symbol, status, updatedBy: req.user?._id },
+            { unitName, symbol, unitType, description, status, updatedBy: req.user?._id },
             { new: true, runValidators: true }
         );
 

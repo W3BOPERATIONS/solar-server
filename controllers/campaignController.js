@@ -1,4 +1,6 @@
 import Campaign from '../models/Campaign.js';
+import CampaignConfig from '../models/CampaignConfig.js';
+import SocialMediaCampaign from '../models/SocialMediaCampaign.js';
 
 // Create a new campaign
 export const createCampaign = async (req, res) => {
@@ -118,5 +120,106 @@ export const getCampaignStats = async (req, res) => {
         res.status(200).json({ ...result, marketingROI: parseFloat(roi.toFixed(2)) });
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+};
+
+// Configuration Controllers
+export const getCampaignConfig = async (req, res, next) => {
+    try {
+        const config = await CampaignConfig.getOrCreate();
+        res.json({ success: true, data: config });
+    } catch (err) {
+        next(err || new Error('Internal Server Error'));
+    }
+};
+
+export const updateCampaignConfig = async (req, res, next) => {
+    try {
+        let config = await CampaignConfig.findOne();
+        if (!config) {
+            config = new CampaignConfig(req.body);
+        } else {
+            // Explicitly update all fields to ensure Mongoose tracks changes
+            const {
+                defaultNameFormat,
+                campaignTypes,
+                cprmConversion,
+                companyConversion,
+                defaultCompanyBudget,
+                defaultCprmBudget
+            } = req.body;
+
+            if (defaultNameFormat !== undefined) config.defaultNameFormat = defaultNameFormat;
+            if (cprmConversion !== undefined) config.cprmConversion = cprmConversion;
+            if (companyConversion !== undefined) config.companyConversion = companyConversion;
+            if (defaultCompanyBudget !== undefined) config.defaultCompanyBudget = defaultCompanyBudget;
+            if (defaultCprmBudget !== undefined) config.defaultCprmBudget = defaultCprmBudget;
+
+            if (campaignTypes && Array.isArray(campaignTypes)) {
+                config.campaignTypes = campaignTypes;
+                config.markModified('campaignTypes');
+            }
+        }
+        config.updatedBy = req.user?._id;
+        await config.save();
+        res.json({ success: true, message: 'Settings updated successfully', data: config });
+    } catch (err) {
+        console.error('Update Config Error:', err);
+        next(err || new Error('Internal Server Error'));
+    }
+};
+
+// Social Media Campaign Controllers
+export const getAllSocialCampaigns = async (req, res, next) => {
+    try {
+        const campaigns = await SocialMediaCampaign.find()
+            .populate('state')
+            .populate('cluster')
+            .sort({ createdAt: -1 });
+        res.json({ success: true, count: campaigns.length, data: campaigns });
+    } catch (err) {
+        next(err || new Error('Internal Server Error'));
+    }
+};
+
+export const createSocialCampaign = async (req, res, next) => {
+    try {
+        const campaign = await SocialMediaCampaign.create({
+            ...req.body,
+            createdBy: req.user?._id
+        });
+        await campaign.populate(['state', 'cluster']);
+        res.status(201).json({ success: true, data: campaign });
+    } catch (err) {
+        next(err || new Error('Internal Server Error'));
+    }
+};
+
+export const updateSocialCampaign = async (req, res, next) => {
+    try {
+        const campaign = await SocialMediaCampaign.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true, runValidators: true }
+        ).populate(['state', 'cluster']);
+
+        if (!campaign) {
+            return res.status(404).json({ success: false, message: 'Campaign not found' });
+        }
+        res.json({ success: true, data: campaign });
+    } catch (err) {
+        next(err || new Error('Internal Server Error'));
+    }
+};
+
+export const deleteSocialCampaign = async (req, res, next) => {
+    try {
+        const campaign = await SocialMediaCampaign.findByIdAndDelete(req.params.id);
+        if (!campaign) {
+            return res.status(404).json({ success: false, message: 'Campaign not found' });
+        }
+        res.json({ success: true, message: 'Campaign deleted successfully' });
+    } catch (err) {
+        next(err || new Error('Internal Server Error'));
     }
 };

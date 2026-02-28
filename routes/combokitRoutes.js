@@ -22,10 +22,14 @@ import {
     createAssignment,
     getAssignments,
     updateAssignment,
-    deleteAssignment
+    deleteAssignment,
+    getPlansByRole
 } from '../controllers/combokitController.js';
 
 const router = express.Router();
+
+// Role Plans Route
+router.get('/plans', getPlansByRole);
 
 // SolarKit Routes
 router.post('/solarkits', createSolarKit);
@@ -35,6 +39,10 @@ router.delete('/solarkits/:id', deleteSolarKit);
 router.put('/solarkits/:id/status', updateSolarKitStatus);
 router.get('/solarkits/:id/bom', getSolarKitBOM);
 router.put('/solarkits/:id/bom', saveSolarKitBOM);
+
+// Route Alias for backward compatibility (Short URL)
+router.get('/:id/bom', getSolarKitBOM);
+router.put('/:id/bom', saveSolarKitBOM);
 
 // AMC Plan Routes
 router.post('/amc-plans', createAMCPlan);

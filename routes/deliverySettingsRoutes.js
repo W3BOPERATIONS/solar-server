@@ -12,6 +12,8 @@ import {
     createVehicle,
     updateVehicle,
     deleteVehicle,
+    getVendorDeliveryConfig,
+    upsertVendorDeliveryConfig,
     getVendorDeliveryPlans,
     createVendorDeliveryPlan,
     updateVendorDeliveryPlan,
@@ -46,6 +48,11 @@ router.route('/vehicles')
 router.route('/vehicles/:id')
     .put(updateVehicle)
     .delete(deleteVehicle);
+
+// Vendor Delivery Config
+router.route('/vendor-config')
+    .get(getVendorDeliveryConfig)
+    .post(upsertVendorDeliveryConfig);
 
 // Vendor Delivery Plans
 router.route('/vendor-plans')

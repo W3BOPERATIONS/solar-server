@@ -1,6 +1,11 @@
 import mongoose from 'mongoose';
 
 const surveyBOMSchema = new mongoose.Schema({
+    quoteSettingsId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'QuoteSettings',
+        required: true
+    },
     category: {
         type: String,
         required: true

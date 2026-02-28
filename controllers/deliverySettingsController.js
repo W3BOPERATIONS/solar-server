@@ -1,6 +1,7 @@
 import DeliveryType from '../models/DeliveryType.js';
 import DeliveryBenchmarkPrice from '../models/DeliveryBenchmarkPrice.js';
 import Vehicle from '../models/Vehicle.js';
+import VendorDeliveryConfig from '../models/VendorDeliveryConfig.js';
 import VendorDeliveryPlan from '../models/VendorDeliveryPlan.js';
 
 // ==========================================
@@ -9,7 +10,22 @@ import VendorDeliveryPlan from '../models/VendorDeliveryPlan.js';
 
 export const getDeliveryTypes = async (req, res) => {
     try {
-        const types = await DeliveryType.find().sort({ createdAt: -1 });
+        // Drop old unique index if it exists to allow location-specific delivery types
+        try {
+            await DeliveryType.collection.dropIndex('name_1');
+        } catch (e) { }
+
+        const { state, cluster, district } = req.query;
+        let filter = {};
+        if (state) filter.state = state;
+        if (cluster) filter.cluster = cluster;
+        if (district) filter.district = district;
+
+        const types = await DeliveryType.find(filter)
+            .populate('state', 'name')
+            .populate('cluster', 'name')
+            .populate('district', 'name')
+            .sort({ createdAt: -1 });
         res.status(200).json({ success: true, count: types.length, data: types });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -19,11 +35,10 @@ export const getDeliveryTypes = async (req, res) => {
 export const createDeliveryType = async (req, res) => {
     try {
         const type = await DeliveryType.create(req.body);
+        await type.populate(['state', 'cluster', 'district']);
         res.status(201).json({ success: true, data: type });
     } catch (error) {
-        if (error.code === 11000) {
-            return res.status(400).json({ success: false, message: 'Delivery type already exists' });
-        }
+        // Handle generic errors since unique constraint is removed
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -33,7 +48,8 @@ export const updateDeliveryType = async (req, res) => {
         const type = await DeliveryType.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
             runValidators: true,
-        });
+        }).populate(['state', 'cluster', 'district']);
+
         if (!type) {
             return res.status(404).json({ success: false, message: 'Delivery type not found' });
         }
@@ -61,8 +77,28 @@ export const deleteDeliveryType = async (req, res) => {
 
 export const getBenchmarkPrices = async (req, res) => {
     try {
-        const prices = await DeliveryBenchmarkPrice.find()
+        // TEMP RUN: Drop the conflicting index safely
+        try {
+            await DeliveryBenchmarkPrice.collection.dropIndex('deliveryType_1');
+        } catch (e) { }
+        try {
+            await DeliveryBenchmarkPrice.collection.dropIndex('deliveryType_1_location_1');
+        } catch (e) { }
+
+        const { state, cluster, district, category, projectType } = req.query;
+        let filter = {};
+
+        if (state) filter.state = state;
+        if (cluster) filter.cluster = cluster;
+        if (district) filter.district = district;
+        if (category) filter.category = category;
+        if (projectType) filter.projectType = projectType;
+
+        const prices = await DeliveryBenchmarkPrice.find(filter)
             .populate('deliveryType')
+            .populate('state', 'name')
+            .populate('cluster', 'name')
+            .populate('district', 'name')
             .sort({ createdAt: -1 });
         res.status(200).json({ success: true, count: prices.length, data: prices });
     } catch (error) {
@@ -73,11 +109,11 @@ export const getBenchmarkPrices = async (req, res) => {
 export const createBenchmarkPrice = async (req, res) => {
     try {
         const price = await DeliveryBenchmarkPrice.create(req.body);
-        await price.populate('deliveryType');
+        await price.populate(['deliveryType', 'state', 'cluster', 'district']);
         res.status(201).json({ success: true, data: price });
     } catch (error) {
         if (error.code === 11000) {
-            return res.status(400).json({ success: false, message: 'Benchmark price for this delivery type already exists' });
+            return res.status(400).json({ success: false, message: 'Benchmark price for this combination already exists' });
         }
         res.status(500).json({ success: false, message: error.message });
     }
@@ -88,7 +124,8 @@ export const updateBenchmarkPrice = async (req, res) => {
         const price = await DeliveryBenchmarkPrice.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
             runValidators: true,
-        }).populate('deliveryType');
+        }).populate(['deliveryType', 'state', 'cluster', 'district']);
+
         if (!price) {
             return res.status(404).json({ success: false, message: 'Benchmark price not found' });
         }
@@ -163,7 +200,38 @@ export const deleteVehicle = async (req, res) => {
 };
 
 // ==========================================
-// Vendor Delivery Plans
+// Vendor Delivery Config
+// ==========================================
+
+export const getVendorDeliveryConfig = async (req, res) => {
+    try {
+        let config = await VendorDeliveryConfig.findOne();
+        if (!config) {
+            // Return defaults if not created yet
+            config = { distanceThreshold: 50, allowPickup: true, allowDelivery: true };
+        }
+        res.status(200).json({ success: true, data: config });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const upsertVendorDeliveryConfig = async (req, res) => {
+    try {
+        let config = await VendorDeliveryConfig.findOne();
+        if (config) {
+            config = await VendorDeliveryConfig.findByIdAndUpdate(config._id, req.body, { new: true, runValidators: true });
+        } else {
+            config = await VendorDeliveryConfig.create(req.body);
+        }
+        res.status(200).json({ success: true, data: config });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ==========================================
+// Vendor Delivery Plans (Legacy Individual Plans)
 // ==========================================
 
 export const getVendorDeliveryPlans = async (req, res) => {

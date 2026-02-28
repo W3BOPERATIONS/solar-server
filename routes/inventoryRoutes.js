@@ -14,7 +14,9 @@ import {
     getWarehouseById,
     createWarehouse,
     updateWarehouse,
-    deleteWarehouse
+    deleteWarehouse,
+    getSettings,
+    updateSettings
 } from '../controllers/inventoryController.js';
 import { protect } from '../middleware/auth.js';
 
@@ -46,5 +48,9 @@ router.get('/warehouses/:id', getWarehouseById);
 router.post('/warehouses', createWarehouse);
 router.patch('/warehouses/:id', updateWarehouse);
 router.delete('/warehouses/:id', deleteWarehouse);
+
+// Inventory Settings
+router.get('/settings', getSettings);
+router.put('/settings', updateSettings);
 
 export default router;

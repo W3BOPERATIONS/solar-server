@@ -9,6 +9,7 @@ import * as skuController from '../controllers/skuController.js';
 import * as priceMasterController from '../controllers/priceMasterController.js';
 import * as subCategoryController from '../controllers/subCategoryController.js';
 import * as subProjectTypeController from '../controllers/subProjectTypeController.js';
+import * as projectCategoryMappingController from '../controllers/projectCategoryMappingController.js';
 import {
     BRAND,
     DEPARTMENT,
@@ -63,6 +64,11 @@ router.post('/price-master', protect, priceMasterController.createPriceMaster);
 router.put('/price-master/:id', protect, priceMasterController.updatePriceMaster);
 router.delete('/price-master/:id', protect, priceMasterController.deletePriceMaster);
 
+// --- Project Category Mappings ---
+router.get('/project-category-mappings', projectCategoryMappingController.getAllMappings);
+router.post('/project-category-mappings', protect, projectCategoryMappingController.createMapping);
+router.put('/project-category-mappings/:id', protect, projectCategoryMappingController.updateMapping);
+router.delete('/project-category-mappings/:id', protect, projectCategoryMappingController.deleteMapping);
 
 // --- Legacy Masters ---
 

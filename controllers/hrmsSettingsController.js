@@ -24,24 +24,27 @@ export const getHRMSSettings = async (req, res, next) => {
 
 export const createOrUpdateHRMSSettings = async (req, res, next) => {
     try {
-        const { department, position, payroll, recruitment, performance, vacancy } = req.body;
+        const { department, position, payroll, recruitment, performance, vacancy, test } = req.body;
+
+        const updateData = {
+            department,
+            position,
+            updatedBy: req.user?._id
+        };
+
+        if (payroll) updateData.payroll = payroll;
+        if (recruitment) updateData.recruitment = recruitment;
+        if (performance) updateData.performance = performance;
+        if (vacancy) updateData.vacancy = vacancy;
+        if (test) updateData.test = test;
 
         // Upsert based on department and position
         const settings = await HRMSSettings.findOneAndUpdate(
             { department, position },
-            {
-                department,
-                position,
-                payroll,
-                recruitment,
-                performance,
-                vacancy,
-                updatedBy: req.user?._id
-            },
+            { $set: updateData },
             { new: true, upsert: true, setDefaultsOnInsert: true }
         );
 
-        console.log("Data successfully stored in DB:", settings);
         res.json({ success: true, message: 'Settings saved successfully', data: settings });
     } catch (err) {
         next(err);

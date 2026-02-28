@@ -28,7 +28,11 @@ const moduleCompletionSchema = new mongoose.Schema({
     iconName: {
         type: String,
         default: 'ClipboardList'
-    }
+    },
+    itemsStatus: [{
+        itemName: { type: String, required: true },
+        completed: { type: Boolean, default: false }
+    }]
 }, {
     timestamps: true
 });

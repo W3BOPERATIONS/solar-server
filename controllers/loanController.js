@@ -4,12 +4,16 @@ import ModuleCompletion from '../models/ModuleCompletion.js';
 export const getLoanRules = async (req, res) => {
     try {
         const { clusterId } = req.query;
-        if (!clusterId) {
-            return res.status(400).json({ message: 'Cluster ID is required' });
+        console.log('GET /api/loan - clusterId:', clusterId);
+        let query = {};
+        if (clusterId && clusterId !== 'undefined') {
+            query.clusterId = clusterId;
         }
-        const rules = await LoanRule.find({ clusterId });
+        const rules = await LoanRule.find(query);
+        console.log(`GET /api/loan - Found ${rules.length} rules`);
         res.status(200).json(rules);
     } catch (error) {
+        console.error('GET /api/loan Error:', error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -17,27 +21,51 @@ export const getLoanRules = async (req, res) => {
 export const createLoanRule = async (req, res) => {
     try {
         const { clusterId, projectType, interestRate, tenureMonths, maxAmount, fields } = req.body;
+        console.log('POST /api/loan - Body:', { projectType, clusterId });
 
-        // Prevent duplicates for same project type in same cluster
-        const existing = await LoanRule.findOne({ clusterId, projectType });
+        // Normalize projectType for consistent checking
+        const normalizedPT = projectType.charAt(0).toUpperCase() + projectType.slice(1).toLowerCase();
+
+        // Prevent duplicates for same project type in same cluster (or global)
+        const query = {
+            projectType: normalizedPT
+        };
+
+        if (clusterId && clusterId !== 'undefined') {
+            query.clusterId = clusterId;
+        } else {
+            // Check for both null and missing clusterId to be safe
+            query.$or = [
+                { clusterId: null },
+                { clusterId: { $exists: false } }
+            ];
+        }
+
+        const existing = await LoanRule.findOne(query);
         if (existing) {
-            return res.status(400).json({ message: `Loan rule for ${projectType} already exists in this cluster` });
+            console.log('POST /api/loan - Duplicate found:', existing._id);
+            return res.status(400).json({ message: `Loan rule for ${normalizedPT} already exists` });
         }
 
         const newRule = new LoanRule({
-            clusterId,
-            projectType,
-            interestRate,
-            tenureMonths,
-            maxAmount,
-            fields
+            clusterId: clusterId && clusterId !== 'undefined' ? clusterId : null,
+            projectType: normalizedPT,
+            interestRate: interestRate || 0,
+            tenureMonths: tenureMonths || 0,
+            maxAmount: maxAmount || 0,
+            fields: fields || [],
+            status: 'active'
         });
 
         await newRule.save();
-        await updateLoanCompletion(clusterId);
+        console.log('POST /api/loan - Saved new rule:', newRule._id);
+        if (newRule.clusterId) {
+            await updateLoanCompletion(newRule.clusterId);
+        }
 
         res.status(201).json(newRule);
     } catch (error) {
+        console.error('POST /api/loan Error:', error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -45,15 +73,27 @@ export const createLoanRule = async (req, res) => {
 export const updateLoanRule = async (req, res) => {
     try {
         const { id } = req.params;
-        const updatedRule = await LoanRule.findByIdAndUpdate(id, req.body, { new: true });
+        const data = req.body;
+        console.log(`PUT /api/loan/${id} - Body:`, { projectType: data.projectType });
+
+        if (data.projectType) {
+            data.projectType = data.projectType.charAt(0).toUpperCase() + data.projectType.slice(1).toLowerCase();
+        }
+
+        const updatedRule = await LoanRule.findByIdAndUpdate(id, data, { new: true });
 
         if (!updatedRule) {
+            console.log(`PUT /api/loan/${id} - Not found`);
             return res.status(404).json({ message: 'Loan rule not found' });
         }
 
-        await updateLoanCompletion(updatedRule.clusterId);
+        console.log(`PUT /api/loan/${id} - Updated:`, updatedRule._id);
+        if (updatedRule.clusterId) {
+            await updateLoanCompletion(updatedRule.clusterId);
+        }
         res.status(200).json(updatedRule);
     } catch (error) {
+        console.error(`PUT /api/loan/${id} Error:`, error);
         res.status(500).json({ message: error.message });
     }
 };

@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import SolarKit from '../models/SolarKit.js';
 import AMCPlan from '../models/AMCPlan.js';
 import AMCService from '../models/AMCService.js';
@@ -7,6 +8,29 @@ import CustomizedComboKit from '../models/CustomizedComboKit.js';
 import State from '../models/State.js';
 import Cluster from '../models/Cluster.js';
 import District from '../models/District.js';
+import DealerPlan from '../models/DealerPlan.js';
+import FranchiseePlan from '../models/FranchiseePlan.js';
+import ChannelPartnerPlan from '../models/ChannelPartnerPlan.js';
+
+export const getPlansByRole = async (req, res) => {
+    try {
+        const { role } = req.query;
+        let plans = [];
+        if (role === 'Dealer') {
+            plans = await DealerPlan.find({ isActive: true });
+        } else if (role === 'Franchisee') {
+            plans = await FranchiseePlan.find({ isActive: true });
+        } else if (role === 'Channel Partner') {
+            plans = await ChannelPartnerPlan.find({ isActive: true });
+        } else {
+            return res.status(400).json({ message: 'Invalid role' });
+        }
+        res.status(200).json(plans);
+    } catch (error) {
+        console.error("Error fetching plans by role:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
 
 // --- SolarKit Controllers ---
 
@@ -33,11 +57,15 @@ export const getSolarKits = async (req, res) => {
 
 export const updateSolarKit = async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ message: 'Invalid SolarKit ID' });
+        }
         const updatedSolarKit = await SolarKit.findByIdAndUpdate(
             req.params.id,
             req.body,
             { new: true }
         );
+        if (!updatedSolarKit) return res.status(404).json({ message: 'SolarKit not found' });
         res.status(200).json(updatedSolarKit);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -46,6 +74,9 @@ export const updateSolarKit = async (req, res) => {
 
 export const deleteSolarKit = async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ message: 'Invalid SolarKit ID' });
+        }
         await SolarKit.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: 'SolarKit deleted successfully' });
     } catch (error) {
@@ -55,12 +86,16 @@ export const deleteSolarKit = async (req, res) => {
 
 export const updateSolarKitStatus = async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ message: 'Invalid SolarKit ID' });
+        }
         const { status } = req.body;
         const updatedSolarKit = await SolarKit.findByIdAndUpdate(
             req.params.id,
             { status },
             { new: true }
         );
+        if (!updatedSolarKit) return res.status(404).json({ message: 'SolarKit not found' });
         res.status(200).json(updatedSolarKit);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -69,6 +104,9 @@ export const updateSolarKitStatus = async (req, res) => {
 
 export const getSolarKitBOM = async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ message: 'Invalid SolarKit ID' });
+        }
         const solarKit = await SolarKit.findById(req.params.id);
         if (!solarKit) return res.status(404).json({ message: 'SolarKit not found' });
         res.status(200).json({ bom: solarKit.bom || [] });
@@ -79,14 +117,47 @@ export const getSolarKitBOM = async (req, res) => {
 
 export const saveSolarKitBOM = async (req, res) => {
     try {
+        const id = req.params.id;
         const { bom } = req.body;
-        const updatedSolarKit = await SolarKit.findByIdAndUpdate(
-            req.params.id,
-            { bom },
-            { new: true }
-        );
+
+        console.log('Save BOM Request for ID:', id);
+
+        // Normalize BOM data: convert price to number, and map 'type' to 'itemType' as per new schema
+        const normalizedBom = bom.map(section => ({
+            ...section,
+            items: section.items.map(item => ({
+                name: item.name,
+                itemType: item.itemType || item.type,
+                qty: item.qty,
+                unit: item.unit,
+                price: Number(item.price) || 0
+            }))
+        }));
+
+        // Try finding by ID directly first
+        let updatedSolarKit;
+
+        if (mongoose.Types.ObjectId.isValid(id)) {
+            updatedSolarKit = await SolarKit.findByIdAndUpdate(
+                id,
+                { bom: normalizedBom },
+                { new: true }
+            );
+        } else {
+            console.log('Processing non-standard ID:', id);
+            updatedSolarKit = await SolarKit.findOneAndUpdate(
+                { _id: id },
+                { bom: normalizedBom },
+                { new: true }
+            );
+        }
+
+        if (!updatedSolarKit) return res.status(404).json({ message: 'SolarKit not found' });
+
+        console.log('BOM saved successfully for ID:', id);
         res.status(200).json(updatedSolarKit);
     } catch (error) {
+        console.error('Final Save BOM error:', error.message);
         res.status(500).json({ message: error.message });
     }
 };
@@ -99,7 +170,15 @@ export const createAMCPlan = async (req, res) => {
         const newPlan = new AMCPlan({
             state: stateId,
             services: serviceIds,
-            ...req.body // Spread other fields if any, though explicit mapping is safer
+            planName: req.body.planName,
+            category: req.body.category,
+            subCategory: req.body.subCategory,
+            projectType: req.body.projectType,
+            subProjectType: req.body.subProjectType,
+            monthlyCharge: req.body.monthlyCharge,
+            yearlyCharge: req.body.yearlyCharge,
+            annualVisits: req.body.annualVisits,
+            status: req.body.status || 'Active'
         });
         const savedPlan = await newPlan.save();
         res.status(201).json(savedPlan);
@@ -123,14 +202,21 @@ export const updateAMCPlan = async (req, res) => {
     try {
         const { stateId, serviceIds } = req.body;
         const updateData = {
-            ...req.body,
-            state: stateId, // Map if present
-            services: serviceIds // Map if present
+            state: stateId,
+            services: serviceIds,
+            planName: req.body.planName,
+            category: req.body.category,
+            subCategory: req.body.subCategory,
+            projectType: req.body.projectType,
+            subProjectType: req.body.subProjectType,
+            monthlyCharge: req.body.monthlyCharge,
+            yearlyCharge: req.body.yearlyCharge,
+            annualVisits: req.body.annualVisits,
+            status: req.body.status
         };
-        // Remove the old keys if desired, but Mongoose ignores undefined fields in schema usually.
-        // However, if we want to be clean:
-        if (stateId) delete updateData.stateId;
-        if (serviceIds) delete updateData.serviceIds;
+
+        // Filter out undefined fields
+        Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
 
         const updatedPlan = await AMCPlan.findByIdAndUpdate(req.params.id, updateData, { new: true })
             .populate('state', 'name')
@@ -257,10 +343,16 @@ export const createAssignment = async (req, res) => {
 
 export const getAssignments = async (req, res) => {
     try {
-        const { state, cluster } = req.query;
+        const { state, cluster, city, district, category, subCategory, subProjectType, projectType } = req.query;
         const filter = {};
         if (state) filter.state = state;
         if (cluster) filter.cluster = cluster;
+        if (city) filter.city = city;
+        if (district) filter.district = district;
+        if (category) filter.category = category;
+        if (subCategory) filter.subCategory = subCategory;
+        if (subProjectType) filter.subProjectType = subProjectType;
+        if (projectType) filter.projectType = projectType;
 
         const assignments = await ComboKitAssignment.find(filter)
             .populate('state', 'name')

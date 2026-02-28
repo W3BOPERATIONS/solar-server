@@ -11,6 +11,10 @@ const placeholderNameSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    dbField: {
+        type: String,
+        default: '' // Mapping to Project model field name
+    },
     number: {
         type: Number,
         default: 0

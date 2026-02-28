@@ -20,8 +20,22 @@ const checklistTemplateSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
-        unique: true,
         trim: true
+    },
+    state: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'State',
+        required: true
+    },
+    district: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'District',
+        required: true
+    },
+    cluster: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Cluster',
+        required: true
     },
     items: [checklistItemSchema],
     status: {
@@ -32,6 +46,11 @@ const checklistTemplateSchema = new mongoose.Schema({
     completionStatus: {
         type: String,
         enum: ['completed', 'pending'],
+        default: 'pending'
+    },
+    manualStatus: {
+        type: String,
+        enum: ['pending', 'completed', 'high-priority'],
         default: 'pending'
     },
     category: {
@@ -49,6 +68,9 @@ const checklistTemplateSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
+
+// Compound unique index to allow same name across different categories and regions
+checklistTemplateSchema.index({ name: 1, cluster: 1, category: 1 }, { unique: true });
 
 const ChecklistTemplate = mongoose.model('ChecklistTemplate', checklistTemplateSchema);
 

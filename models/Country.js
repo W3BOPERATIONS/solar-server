@@ -8,16 +8,6 @@ const countrySchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
-    code: {
-      type: String,
-      unique: true,
-      sparse: true,
-      trim: true,
-    },
-    description: {
-      type: String,
-      default: '',
-    },
     isActive: {
       type: Boolean,
       default: true,

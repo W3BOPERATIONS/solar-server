@@ -179,10 +179,10 @@ export const getPlaceholderNames = async (req, res) => {
 
 export const savePlaceholderName = async (req, res) => {
     try {
-        const { labelKey, labelValue, number } = req.body;
+        const { labelKey, labelValue, dbField, number } = req.body;
         const placeholder = await PlaceholderName.findOneAndUpdate(
             { labelKey },
-            { labelValue, number, status: 'Active' },
+            { labelValue, dbField, number, status: 'Active' },
             { new: true, upsert: true, setDefaultsOnInsert: true }
         );
         res.status(200).json(placeholder);

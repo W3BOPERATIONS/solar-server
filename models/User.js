@@ -36,16 +36,34 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    state: {
-      type: String,
-      required: true,
+    country: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Country',
+      default: null,
     },
-    cluster: {
-      type: String,
+    state: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'State',
+      default: null,
+    },
+    city: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'City',
       default: null,
     },
     district: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'District',
+      default: null,
+    },
+    cluster: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Cluster',
+      default: null,
+    },
+    zone: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Zone',
       default: null,
     },
     companyName: {

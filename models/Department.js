@@ -5,14 +5,18 @@ const departmentSchema = new mongoose.Schema(
         name: {
             type: String,
             required: true,
-            trim: true,
-            unique: true
+            trim: true
+            // unique removed to allow same names across countries
         },
         code: {
             type: String,
             trim: true,
-            unique: true,
             sparse: true
+        },
+        country: {
+            type: String,
+            required: true,
+            default: 'India' // Just in case, adding a default
         },
         description: {
             type: String,
@@ -58,5 +62,8 @@ const departmentSchema = new mongoose.Schema(
         timestamps: true,
     }
 );
+
+// Ensure name is unique per country
+departmentSchema.index({ name: 1, country: 1 }, { unique: true });
 
 export default mongoose.model('Department', departmentSchema);

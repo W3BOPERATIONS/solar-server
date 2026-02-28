@@ -4,7 +4,9 @@ import ChecklistCategory from '../models/ChecklistCategory.js';
 
 export const getAllChecklists = async (req, res) => {
     try {
-        const checklists = await ChecklistTemplate.find().sort({ createdAt: -1 });
+        const { clusterId } = req.query;
+        const filter = clusterId ? { cluster: clusterId } : {};
+        const checklists = await ChecklistTemplate.find(filter).sort({ createdAt: -1 });
         res.status(200).json(checklists);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -13,11 +15,17 @@ export const getAllChecklists = async (req, res) => {
 
 export const createChecklist = async (req, res) => {
     try {
-        const { name } = req.body;
-        const exists = await ChecklistTemplate.findOne({ name });
-        if (exists) {
-            return res.status(400).json({ message: "Checklist with this name already exists" });
+        const { name, cluster, category } = req.body;
+        if (!cluster) {
+            return res.status(400).json({ message: "Region (Cluster) is required to create a checklist" });
         }
+
+        // Allow same name if category is different within a cluster
+        const exists = await ChecklistTemplate.findOne({ name, cluster, category });
+        if (exists) {
+            return res.status(400).json({ message: "Checklist with this name already exists for this category in this region" });
+        }
+
         const checklist = new ChecklistTemplate(req.body);
         await checklist.save();
         res.status(201).json(checklist);
@@ -65,13 +73,29 @@ export const getModuleCompletions = async (req, res) => {
 
 export const updateModuleCompletion = async (req, res) => {
     try {
-        const { moduleName, completed, progressPercent, category, iconName, clusterId } = req.body;
+        const { moduleName, itemsStatus, category, iconName, clusterId } = req.body;
         if (!clusterId) {
             return res.status(400).json({ message: "clusterId is required for regional tracking" });
         }
+
+        // Calculate progress percentage based on itemsStatus
+        let progressPercent = 0;
+        let completed = false;
+        if (itemsStatus && itemsStatus.length > 0) {
+            const completedItems = itemsStatus.filter(item => item.completed).length;
+            progressPercent = Math.round((completedItems / itemsStatus.length) * 100);
+            completed = progressPercent === 100;
+        }
+
         const completion = await ModuleCompletion.findOneAndUpdate(
             { moduleName, clusterId },
-            { completed, progressPercent, category, iconName },
+            {
+                completed,
+                progressPercent,
+                category,
+                iconName,
+                itemsStatus
+            },
             { new: true, upsert: true }
         );
         res.status(200).json(completion);
@@ -118,7 +142,9 @@ export const seedChecklists = async (req, res) => {
             { title: "Quote Setting", iconName: 'FileText', iconBg: "bg-green-100 text-green-600" },
             { title: "Combokit Setting", iconName: 'Layers', iconBg: "bg-pink-100 text-pink-600" },
             { title: "Other Setting", iconName: 'Settings', iconBg: "bg-yellow-100 text-yellow-600" },
-            { title: "HRMS Setting", iconName: 'Users', iconBg: "bg-indigo-100 text-indigo-600" }
+            { title: "HRMS Setting", iconName: 'Users', iconBg: "bg-indigo-100 text-indigo-600" },
+            { title: "Brand manufacturer", iconName: 'Cpu', iconBg: "bg-blue-100 text-blue-600" },
+            { title: "Order procurement", iconName: 'ShoppingCart', iconBg: "bg-green-100 text-green-600" }
         ];
 
         for (const cat of baseCategories) {

@@ -6,29 +6,25 @@ const installerToolSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-    description: {
-        type: String,
-        trim: true
-    },
-    status: {
-        type: String,
-        enum: ['Active', 'Inactive'],
-        default: 'Active'
-    },
-    state: {
+    projectCategory: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'State',
+        ref: 'Category',
         required: true
     },
-    cluster: {
+    subCategory: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Cluster',
+        ref: 'SubCategory',
+        required: false
+    },
+    projectType: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'ProjectType',
         required: true
     },
-    district: {
+    subType: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'District',
-        required: true
+        ref: 'SubProjectType',
+        required: false
     }
 }, {
     timestamps: true

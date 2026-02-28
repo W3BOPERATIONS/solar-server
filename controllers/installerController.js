@@ -1,6 +1,6 @@
 import SolarInstaller from '../models/SolarInstaller.js';
 import InstallerTool from '../models/InstallerTool.js';
-import InstallationRate from '../models/InstallationRate.js';
+import InstallerRating from '../models/InstallerRating.js';
 import InstallerAgency from '../models/InstallerAgency.js';
 
 // --- Solar Installer Controllers ---
@@ -60,16 +60,18 @@ export const deleteSolarInstaller = async (req, res) => {
 
 export const getInstallerTools = async (req, res) => {
     try {
-        const { state, cluster, district } = req.query;
+        const { projectCategory, subCategory, projectType, subType } = req.query;
         const query = {};
-        if (state) query.state = state;
-        if (cluster) query.cluster = cluster;
-        if (district) query.district = district;
+        if (projectCategory) query.projectCategory = projectCategory;
+        if (subCategory) query.subCategory = subCategory;
+        if (projectType) query.projectType = projectType;
+        if (subType) query.subType = subType;
 
         const tools = await InstallerTool.find(query)
-            .populate('state', 'name code')
-            .populate('cluster', 'name')
-            .populate('district', 'name')
+            .populate('projectCategory', 'name')
+            .populate('subCategory', 'name')
+            .populate('projectType', 'name')
+            .populate('subType', 'name')
             .sort({ createdAt: -1 });
         res.status(200).json(tools);
     } catch (error) {
@@ -109,54 +111,44 @@ export const deleteInstallerTool = async (req, res) => {
     }
 };
 
-// --- Installation Rate Controllers ---
+// --- Installer Rating Controllers ---
 
-export const getInstallationRates = async (req, res) => {
+export const getInstallerRatings = async (req, res) => {
     try {
-        const { state, cluster, district } = req.query;
-        const query = {};
-        if (state) query.state = state;
-        if (cluster) query.cluster = cluster;
-        if (district) query.district = district;
-
-        const rates = await InstallationRate.find(query)
-            .populate('state', 'name code')
-            .populate('cluster', 'name')
-            .populate('district', 'name')
-            .sort({ createdAt: -1 });
-        res.status(200).json(rates);
+        const ratings = await InstallerRating.find().sort({ createdAt: -1 });
+        res.status(200).json(ratings);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-export const createInstallationRate = async (req, res) => {
+export const createInstallerRating = async (req, res) => {
     try {
-        const newRate = new InstallationRate(req.body);
-        await newRate.save();
-        res.status(201).json(newRate);
+        const newRating = new InstallerRating(req.body);
+        await newRating.save();
+        res.status(201).json(newRating);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 };
 
-export const updateInstallationRate = async (req, res) => {
+export const updateInstallerRating = async (req, res) => {
     try {
         const { id } = req.params;
-        const updatedRate = await InstallationRate.findByIdAndUpdate(id, req.body, { new: true });
-        if (!updatedRate) return res.status(404).json({ message: 'Rate not found' });
-        res.status(200).json(updatedRate);
+        const updatedRating = await InstallerRating.findByIdAndUpdate(id, req.body, { new: true });
+        if (!updatedRating) return res.status(404).json({ message: 'Rating not found' });
+        res.status(200).json(updatedRating);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 };
 
-export const deleteInstallationRate = async (req, res) => {
+export const deleteInstallerRating = async (req, res) => {
     try {
         const { id } = req.params;
-        const deletedRate = await InstallationRate.findByIdAndDelete(id);
-        if (!deletedRate) return res.status(404).json({ message: 'Rate not found' });
-        res.status(200).json({ message: 'Rate deleted successfully' });
+        const deletedRating = await InstallerRating.findByIdAndDelete(id);
+        if (!deletedRating) return res.status(404).json({ message: 'Rating not found' });
+        res.status(200).json({ message: 'Rating deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -210,6 +202,56 @@ export const deleteInstallerAgency = async (req, res) => {
         const deletedAgency = await InstallerAgency.findByIdAndDelete(id);
         if (!deletedAgency) return res.status(404).json({ message: 'Agency not found' });
         res.status(200).json({ message: 'Agency deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// --- Installer Agency Plan Controllers ---
+
+import InstallerAgencyPlan from '../models/InstallerAgencyPlan.js';
+
+export const getInstallerAgencyPlans = async (req, res) => {
+    try {
+        const { stateId } = req.query;
+        let query = {};
+        if (stateId) {
+            query.state = stateId;
+        }
+        const plans = await InstallerAgencyPlan.find(query).sort({ createdAt: 1 }).populate('state', 'name abbreviation');
+        res.status(200).json(plans);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const createInstallerAgencyPlan = async (req, res) => {
+    try {
+        const newPlan = new InstallerAgencyPlan(req.body);
+        await newPlan.save();
+        res.status(201).json(newPlan);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+export const updateInstallerAgencyPlan = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedPlan = await InstallerAgencyPlan.findByIdAndUpdate(id, req.body, { new: true });
+        if (!updatedPlan) return res.status(404).json({ message: 'Agency Plan not found' });
+        res.status(200).json(updatedPlan);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+export const deleteInstallerAgencyPlan = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedPlan = await InstallerAgencyPlan.findByIdAndDelete(id);
+        if (!deletedPlan) return res.status(404).json({ message: 'Agency Plan not found' });
+        res.status(200).json({ message: 'Agency Plan deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

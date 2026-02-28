@@ -7,19 +7,10 @@ const stateSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    code: {
-      type: String,
-      sparse: true,
-      trim: true,
-    },
     country: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Country',
       required: true,
-    },
-    description: {
-      type: String,
-      default: '',
     },
     isActive: {
       type: Boolean,

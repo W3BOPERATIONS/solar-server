@@ -748,7 +748,18 @@ export const scheduleAppDemo = async (req, res) => {
 export const getDealerKYCLists = async (req, res) => {
     try {
         const managerId = req.user.id;
-        const dealers = await User.find({ role: 'dealer', createdBy: managerId }).lean();
+        const { country, state, city, district, cluster, zone } = req.query;
+
+        let query = { role: 'dealer', createdBy: managerId };
+
+        if (country) query.country = country;
+        if (state) query.state = state;
+        if (city) query.city = city;
+        if (district) query.district = district;
+        if (cluster) query.cluster = cluster;
+        if (zone) query.zone = zone;
+
+        const dealers = await User.find(query).lean();
         const kycs = await DealerKYC.find({ dealerManager: managerId, dealer: { $in: dealers.map(d => d._id) } }).lean();
 
         const data = dealers.map(dealer => {

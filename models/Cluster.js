@@ -7,16 +7,11 @@ const clusterSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    code: {
-      type: String,
-      sparse: true,
-      trim: true,
-    },
-    district: {
+    districts: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'District',
       required: true,
-    },
+    }],
     state: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'State',
@@ -26,10 +21,6 @@ const clusterSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Country',
       required: true,
-    },
-    description: {
-      type: String,
-      default: '',
     },
     isActive: {
       type: Boolean,
@@ -51,7 +42,7 @@ const clusterSchema = new mongoose.Schema(
   }
 );
 
-// Compound index for unique cluster per district
-clusterSchema.index({ name: 1, district: 1 }, { unique: true });
+// Compound index for unique cluster name within a state (since it can span multiple districts)
+clusterSchema.index({ name: 1, state: 1 }, { unique: true });
 
 export default mongoose.model('Cluster', clusterSchema);

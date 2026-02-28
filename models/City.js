@@ -4,13 +4,22 @@ const citySchema = new mongoose.Schema(
     {
         name: {
             type: String,
-            required: true,
             trim: true,
         },
-        code: {
-            type: String,
-            sparse: true,
-            trim: true,
+        zones: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Zone',
+            required: true,
+        }],
+        cluster: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Cluster',
+            required: true,
+        },
+        district: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'District',
+            required: true,
         },
         state: {
             type: mongoose.Schema.Types.ObjectId,
@@ -22,10 +31,15 @@ const citySchema = new mongoose.Schema(
             ref: 'Country',
             required: true,
         },
-        description: {
+        areaType: {
             type: String,
-            default: '',
+            enum: ['Urban', 'Rural'],
+            default: 'Urban',
         },
+        pincodes: [{
+            type: String,
+            trim: true,
+        }],
         isActive: {
             type: Boolean,
             default: true,
@@ -46,7 +60,7 @@ const citySchema = new mongoose.Schema(
     }
 );
 
-// Compound index for unique city per state
-citySchema.index({ name: 1, state: 1 }, { unique: true });
+// Compound index for unique city per zone and area type
+citySchema.index({ name: 1, zones: 1, areaType: 1 }, { unique: true });
 
 export default mongoose.model('City', citySchema);

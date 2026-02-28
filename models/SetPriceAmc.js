@@ -2,6 +2,11 @@ import mongoose from 'mongoose';
 
 const setPriceAmcSchema = new mongoose.Schema(
     {
+        quoteSettingsId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'QuoteSettings',
+            required: true
+        },
         productType: {
             type: String,
             required: true,

@@ -2,6 +2,7 @@ import InventoryItem from '../models/InventoryItem.js';
 import RestockLimit from '../models/RestockLimit.js';
 import Brand from '../models/Brand.js';
 import Warehouse from '../models/Warehouse.js';
+import InventorySettings from '../models/InventorySettings.js';
 import mongoose from 'mongoose';
 
 // Create Inventory Item
@@ -86,6 +87,11 @@ export const getInventoryItems = async (req, res) => {
             city,
             district,
             category,
+            subCategory,
+            projectType,
+            subProjectType,
+            productName,
+            sku,
             brand,
             lowStock
         } = req.query;
@@ -100,6 +106,11 @@ export const getInventoryItems = async (req, res) => {
         if (city) query.city = city;
         if (district) query.district = district;
         if (category) query.category = category;
+        if (subCategory) query.subCategory = subCategory;
+        if (projectType) query.projectType = projectType;
+        if (subProjectType) query.subProjectType = subProjectType;
+        if (productName) query.itemName = productName;
+        if (sku) query.sku = sku;
         if (brand) {
             // Check if brand is ObjectId or Name
             if (mongoose.Types.ObjectId.isValid(brand)) {
@@ -214,7 +225,10 @@ export const getRestockLimits = async (req, res) => {
         if (district) query.district = district;
 
         const items = await InventoryItem.find(query)
-            .populate('brand', 'brandName');
+            .populate('brand', 'brandName')
+            .populate('state', 'name')
+            .populate('city', 'name')
+            .populate('district', 'name');
 
         // Fetch limits for these items
         const itemIds = items.map(i => i._id);
@@ -407,6 +421,44 @@ export const getWarehouseById = async (req, res) => {
             .populate('city', 'name');
         if (!warehouse) return res.status(404).json({ message: 'Warehouse not found' });
         res.json({ success: true, data: warehouse });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// ==================== INVENTORY SETTINGS ====================
+
+export const getSettings = async (req, res) => {
+    try {
+        let settings = await InventorySettings.findOne();
+        if (!settings) {
+            settings = await InventorySettings.create({
+                globalLowStockThreshold: 10,
+                brandThresholds: [],
+                productThresholds: []
+            });
+        }
+        res.json({ success: true, data: settings });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const updateSettings = async (req, res) => {
+    try {
+        let settings = await InventorySettings.findOne();
+        if (!settings) {
+            settings = new InventorySettings();
+        }
+
+        const { globalLowStockThreshold, brandThresholds, productThresholds } = req.body;
+
+        if (globalLowStockThreshold !== undefined) settings.globalLowStockThreshold = globalLowStockThreshold;
+        if (brandThresholds) settings.brandThresholds = brandThresholds;
+        if (productThresholds) settings.productThresholds = productThresholds;
+
+        await settings.save();
+        res.json({ success: true, data: settings });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

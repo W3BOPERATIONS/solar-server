@@ -10,6 +10,10 @@ const projectDocumentSchema = new mongoose.Schema({
         type: String,
         required: false
     },
+    templateContent: {
+        type: String,
+        default: ''
+    },
     required: {
         type: Boolean,
         default: false

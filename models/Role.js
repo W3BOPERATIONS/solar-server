@@ -21,13 +21,47 @@ const roleSchema = new mongoose.Schema(
             ref: 'Department'
         },
         level: {
-            type: String, // State, Cluster, District, etc.
+            type: String, // State, Cluster, District, Country, etc.
             default: ''
+        },
+        country: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Country',
+            default: null
+        },
+        state: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'State',
+            default: null
+        },
+        city: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'City',
+            default: null
+        },
+        district: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'District',
+            default: null
+        },
+        cluster: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Cluster',
+            default: null
+        },
+        zone: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Zone',
+            default: null
         },
         parentRole: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Role',
             default: null
+        },
+        isChildPosition: {
+            type: Boolean,
+            default: false
         },
         mandatoryTasks: [{
             type: String
