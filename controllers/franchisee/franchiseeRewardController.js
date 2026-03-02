@@ -1,4 +1,4 @@
-import FranchiseeReward from '../../models/FranchiseeReward.js';
+import FranchiseeReward from '../../models/franchisee/FranchiseeReward.js';
 
 // Create a reward
 export const createReward = async (req, res) => {

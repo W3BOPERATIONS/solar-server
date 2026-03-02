@@ -1,4 +1,4 @@
-import FranchiseeOnboardingGoal from '../../models/FranchiseeOnboardingGoal.js';
+import FranchiseeOnboardingGoal from '../../models/franchisee/FranchiseeOnboardingGoal.js';
 
 // Create a goal
 export const createGoal = async (req, res) => {

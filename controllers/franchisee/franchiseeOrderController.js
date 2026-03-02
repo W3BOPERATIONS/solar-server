@@ -1,4 +1,4 @@
-import FranchiseeOrderSetting from '../../models/FranchiseeOrderSetting.js';
+import FranchiseeOrderSetting from '../../models/franchisee/FranchiseeOrderSetting.js';
 
 // Create an order setting
 export const createOrderSetting = async (req, res) => {

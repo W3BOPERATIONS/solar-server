@@ -1,4 +1,4 @@
-import FranchiseeProfessionType from '../../models/FranchiseeProfessionType.js';
+import FranchiseeProfessionType from '../../models/franchisee/FranchiseeProfessionType.js';
 
 // Create a profession type
 export const createProfession = async (req, res) => {

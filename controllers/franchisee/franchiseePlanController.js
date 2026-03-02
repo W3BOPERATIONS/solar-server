@@ -1,4 +1,4 @@
-import FranchiseePlan from '../../models/FranchiseePlan.js';
+import FranchiseePlan from '../../models/franchisee/FranchiseePlan.js';
 
 // Create a new plan
 export const createPlan = async (req, res) => {
