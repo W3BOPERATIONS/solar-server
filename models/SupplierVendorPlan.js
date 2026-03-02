@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
 
-const supplierTypeSchema = new mongoose.Schema(
+const supplierVendorPlanSchema = new mongoose.Schema(
     {
-        loginTypeName: {
+        name: {
             type: String,
             required: true,
             trim: true,
@@ -22,45 +22,31 @@ const supplierTypeSchema = new mongoose.Schema(
             ref: 'District',
             default: null
         },
-        category: {
+        kycDetails: [{
+            type: String,
+        }],
+        subloginRole: {
             type: String,
             trim: true,
-            default: "",
+            default: '',
         },
-        subCategory: {
+        subloginLimit: {
             type: String,
             trim: true,
-            default: "",
+            default: '',
         },
-        projectType: {
+        accessType: {
             type: String,
             trim: true,
-            default: "",
-        },
-        subType: {
-            type: String,
-            trim: true,
-            default: "",
-        },
-        assignModules: {
-            type: String,
-            trim: true,
-            default: "",
-        },
-        loginAccessType: {
-            type: String,
-            trim: true,
-            default: "",
-        },
-        orderTat: {
-            type: String,
-            trim: true,
-            default: "",
-        },
+            default: 'Full Access',
+        }
     },
     {
         timestamps: true,
     }
 );
 
-export default mongoose.model('SupplierType', supplierTypeSchema);
+// We drop the unique index because a globally applied plan relies on having null
+// stateId/clusterId/districtId, and uniqueness is managed via the controller's logic (upsert).
+
+export default mongoose.model('SupplierVendorPlan', supplierVendorPlanSchema);

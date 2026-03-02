@@ -17,7 +17,7 @@ class LocationService {
      */
     async getDistrictsByState(stateId) {
         const query = { isActive: true };
-        if (stateId) query.state = stateId;
+        if (stateId && stateId !== 'all') query.state = stateId;
         return await District.find(query).sort({ name: 1 });
     }
 
@@ -26,7 +26,7 @@ class LocationService {
      */
     async getClustersByDistrict(districtId) {
         const query = { isActive: true };
-        if (districtId) query.districts = districtId; // Mongoose handles ID in array automatically
+        if (districtId && districtId !== 'all') query.districts = districtId; // Mongoose handles ID in array automatically
         return await Cluster.find(query).sort({ name: 1 });
     }
 
@@ -35,7 +35,7 @@ class LocationService {
      */
     async getClustersByState(stateId) {
         const query = { isActive: true };
-        if (stateId) query.state = stateId;
+        if (stateId && stateId !== 'all') query.state = stateId;
         return await Cluster.find(query).sort({ name: 1 });
     }
 
@@ -43,6 +43,9 @@ class LocationService {
      * Get districts by cluster
      */
     async getDistrictsByCluster(clusterId) {
+        if (clusterId === 'all') {
+            return await District.find({ isActive: true }).sort({ name: 1 });
+        }
         const cluster = await Cluster.findById(clusterId);
         if (!cluster) return [];
         return await District.find({ _id: { $in: cluster.districts }, isActive: true }).sort({ name: 1 });
@@ -53,7 +56,7 @@ class LocationService {
      */
     async getZonesByCluster(clusterId) {
         const query = { isActive: true };
-        if (clusterId) query.clusters = clusterId;
+        if (clusterId && clusterId !== 'all') query.clusters = clusterId;
         return await Zone.find(query).sort({ name: 1 });
     }
 
@@ -62,7 +65,7 @@ class LocationService {
      */
     async getCitiesByZone(zoneId) {
         const query = { isActive: true };
-        if (zoneId) query.zones = zoneId;
+        if (zoneId && zoneId !== 'all') query.zones = zoneId;
         return await City.find(query).sort({ name: 1 });
     }
 

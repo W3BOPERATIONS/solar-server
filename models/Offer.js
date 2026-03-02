@@ -8,7 +8,7 @@ const offerSchema = new mongoose.Schema(
         },
         offerType: {
             type: String,
-            enum: ['Solar Cashback', 'Loyalty Program', 'Limited Stock'],
+            enum: ['Solar Cashback', 'Loyalty Program', 'Limited Stock', 'Referral Bonus', 'Cashback Offer', 'Limited Stock Offer', 'Seasonal Discount'],
             required: true
         },
 

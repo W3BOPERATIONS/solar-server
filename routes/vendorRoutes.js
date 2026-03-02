@@ -20,6 +20,11 @@ import {
     saveInstallerVendorPlan,
     deleteInstallerVendorPlan
 } from '../controllers/installerVendorPlanController.js';
+import {
+    getSupplierVendorPlans,
+    saveSupplierVendorPlan,
+    deleteSupplierVendorPlan
+} from '../controllers/supplierVendorPlanController.js';
 import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -62,5 +67,13 @@ router.route('/installer-vendor-plans')
 
 router.route('/installer-vendor-plans/:id')
     .delete(protect, deleteInstallerVendorPlan);
+
+// Supplier Vendor Plan Routes
+router.route('/supplier-vendor-plans')
+    .get(getSupplierVendorPlans)
+    .post(protect, saveSupplierVendorPlan);
+
+router.route('/supplier-vendor-plans/:id')
+    .delete(protect, deleteSupplierVendorPlan);
 
 export default router;

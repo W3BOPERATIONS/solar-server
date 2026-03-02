@@ -10,17 +10,17 @@ const installerVendorPlanSchema = new mongoose.Schema(
         stateId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'State',
-            required: true
+            default: null
         },
         clusterId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Cluster',
-            required: true
+            default: null
         },
         districtId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'District',
-            required: true
+            default: null
         },
         requirements: [{
             type: String
@@ -59,7 +59,7 @@ const installerVendorPlanSchema = new mongoose.Schema(
     }
 );
 
-// Unique index for plan name within same district
-installerVendorPlanSchema.index({ name: 1, districtId: 1 }, { unique: true });
+// Unique index dropped in favor of logical uniqueness handled in controller
+// installerVendorPlanSchema.index({ name: 1, districtId: 1 }, { unique: true });
 
 export default mongoose.model('InstallerVendorPlan', installerVendorPlanSchema);
