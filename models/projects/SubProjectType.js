@@ -14,7 +14,7 @@ const subProjectTypeSchema = new mongoose.Schema(
         projectTypeId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'ProjectType',
-            required: [true, 'Project Type is required']
+            required: false
         },
         status: {
             type: Boolean,

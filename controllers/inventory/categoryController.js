@@ -17,7 +17,7 @@ export const getAllCategories = async (req, res, next) => {
 export const createCategory = async (req, res, next) => {
     try {
         const { name, projectTypeId, description } = req.body;
-        if (!name || !projectTypeId) return res.status(400).json({ success: false, message: 'Name and Project Type are required' });
+        if (!name) return res.status(400).json({ success: false, message: 'Name is required' });
 
         const category = await Category.create({
             name,

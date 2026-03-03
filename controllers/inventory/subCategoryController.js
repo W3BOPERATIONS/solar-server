@@ -18,7 +18,7 @@ export const getAllSubCategories = async (req, res, next) => {
 export const createSubCategory = async (req, res, next) => {
     try {
         const { name, projectTypeId, categoryId, description } = req.body;
-        if (!name || !projectTypeId || !categoryId) return res.status(400).json({ success: false, message: 'Name, Project Type, and Category are required' });
+        if (!name || !categoryId) return res.status(400).json({ success: false, message: 'Name and Category are required' });
 
         const subCategory = await SubCategory.create({
             name,

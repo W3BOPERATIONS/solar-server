@@ -10,7 +10,7 @@ const categorySchema = new mongoose.Schema(
         projectTypeId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'ProjectType',
-            required: true
+            required: false
         },
         description: {
             type: String,

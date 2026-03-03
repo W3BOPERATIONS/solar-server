@@ -17,7 +17,7 @@ export const getAllSubProjectTypes = async (req, res, next) => {
 export const createSubProjectType = async (req, res, next) => {
     try {
         const { name, projectTypeId, description } = req.body;
-        if (!name || !projectTypeId) return res.status(400).json({ success: false, message: 'Name and Project Type are required' });
+        if (!name) return res.status(400).json({ success: false, message: 'Name is required' });
 
         const subProjectType = await SubProjectType.create({
             name,

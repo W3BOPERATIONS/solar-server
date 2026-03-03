@@ -14,7 +14,7 @@ const subCategorySchema = new mongoose.Schema(
         projectTypeId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'ProjectType',
-            required: [true, 'Project Type is required']
+            required: false
         },
         categoryId: {
             type: mongoose.Schema.Types.ObjectId,
