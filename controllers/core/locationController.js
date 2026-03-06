@@ -213,17 +213,15 @@ export const deleteState = async (req, res, next) => {
 
 export const getAllCities = async (req, res, next) => {
   try {
-    const { zoneId, clusterId, districtId, stateId, countryId, isActive } = req.query;
+    const { districtId, stateId, countryId, isActive } = req.query;
     const query = {};
 
-    if (zoneId) query.zones = zoneId;
-    if (clusterId) query.cluster = clusterId;
     if (districtId) query.district = districtId;
     if (stateId) query.state = stateId;
     if (countryId) query.country = countryId;
     if (isActive !== undefined) query.isActive = isActive === 'true';
 
-    const cities = await City.find(query).populate('zones cluster district state country').sort({ name: 1 });
+    const cities = await City.find(query).populate('district state country').sort({ name: 1 });
     res.json({ success: true, count: cities.length, data: cities });
   } catch (err) {
     next(err);
@@ -232,7 +230,7 @@ export const getAllCities = async (req, res, next) => {
 
 export const getCityById = async (req, res, next) => {
   try {
-    const city = await City.findById(req.params.id).populate('zones state country');
+    const city = await City.findById(req.params.id).populate('district state country');
     if (!city) return res.status(404).json({ success: false, message: 'City not found' });
 
     res.json({ success: true, data: city });
@@ -243,16 +241,14 @@ export const getCityById = async (req, res, next) => {
 
 export const createCity = async (req, res, next) => {
   try {
-    const { name, zones, cluster, district, state, country, areaType, pincodes, description } = req.body;
+    const { name, district, state, country, areaType, pincodes, description } = req.body;
 
-    if (!zones || !zones.length || !cluster || !district || !state || !country) {
-      return res.status(400).json({ success: false, message: 'Zones, cluster, district, state and country are required' });
+    if (!district || !state || !country) {
+      return res.status(400).json({ success: false, message: 'District, state and country are required' });
     }
 
     const city = await City.create({
       name,
-      zones,
-      cluster,
       district,
       state,
       country,
@@ -262,22 +258,65 @@ export const createCity = async (req, res, next) => {
       createdBy: req.user?._id,
     });
 
-    await city.populate('zones cluster district state country');
+    await city.populate('district state country');
     res.status(201).json({ success: true, message: 'City created successfully', data: city });
   } catch (err) {
     next(err);
   }
 };
 
+export const bulkCreateCities = async (req, res, next) => {
+  try {
+    const { cities } = req.body;
+
+    if (!cities || !Array.isArray(cities) || cities.length === 0) {
+      return res.status(400).json({ success: false, message: 'An array of cities is required' });
+    }
+
+    // Prepare cities for insert
+    const citiesToInsert = cities.map(city => ({
+      name: city.name,
+      district: city.district,
+      state: city.state,
+      country: city.country,
+      areaType: city.areaType || 'Urban',
+      pincodes: city.pincodes || [],
+      description: city.description,
+      createdBy: req.user?._id,
+    }));
+
+    // Verify all minimum required fields are present in every row
+    for (const city of citiesToInsert) {
+      if (!city.name || !city.district || !city.state || !city.country) {
+        return res.status(400).json({ success: false, message: 'Every city must have a Name, District, State, and Country' });
+      }
+    }
+
+    const createdCities = await City.insertMany(citiesToInsert, { ordered: false });
+
+    res.status(201).json({ success: true, message: `${createdCities.length} cities created successfully`, count: createdCities.length });
+  } catch (err) {
+    // 11000 is Mongo's duplicate key error
+    if (err.code === 11000 && err.insertedDocs) {
+      return res.status(201).json({
+        success: true,
+        message: `${err.insertedDocs.length} cities created successfully, skipped duplicates.`,
+        count: err.insertedDocs.length
+      });
+    }
+    next(err);
+  }
+};
+
 export const updateCity = async (req, res, next) => {
   try {
-    const { name, zones, cluster, district, state, country, areaType, pincodes, description, isActive } = req.body;
+    const { name, district, state, country, areaType, pincodes, description, isActive } = req.body;
 
     const city = await City.findByIdAndUpdate(
       req.params.id,
-      { name, zones, cluster, district, state, country, areaType, pincodes, description, isActive, updatedBy: req.user?._id },
+      { name, district, state, country, areaType, pincodes, description, isActive, updatedBy: req.user?._id },
       { new: true, runValidators: true }
-    ).populate('zones cluster district state country');
+    ).populate('district state country');
 
     if (!city) return res.status(404).json({ success: false, message: 'City not found' });
 
@@ -302,12 +341,20 @@ export const deleteCity = async (req, res, next) => {
 
 export const getAllDistricts = async (req, res, next) => {
   try {
-    const { stateId, countryId, isActive } = req.query;
+    const { stateId, countryId, clusterId, isActive } = req.query;
     const query = {};
 
     if (stateId) query.state = stateId;
     if (countryId) query.country = countryId;
     if (isActive !== undefined) query.isActive = isActive === 'true';
+    if (clusterId) {
+      const cluster = await Cluster.findById(clusterId);
+      if (cluster) {
+        query._id = { $in: cluster.districts };
+      } else {
+        query._id = null;
+      }
+    }
 
     const districts = await District.find(query).populate('state country').sort({ name: 1 });
     res.json({ success: true, count: districts.length, data: districts });
@@ -471,12 +518,12 @@ export const getAllZones = async (req, res, next) => {
     const { clusterId, stateId, countryId, isActive } = req.query;
     const query = {};
 
-    if (clusterId) query.clusters = clusterId;
+    if (clusterId) query.cluster = clusterId;
     if (stateId) query.state = stateId;
     if (countryId) query.country = countryId;
     if (isActive !== undefined) query.isActive = isActive === 'true';
 
-    const zones = await Zone.find(query).populate('clusters state country').sort({ name: 1 });
+    const zones = await Zone.find(query).populate('cluster districts state country').sort({ name: 1 });
     res.json({ success: true, count: zones.length, data: zones });
   } catch (err) {
     next(err);
@@ -485,7 +532,7 @@ export const getAllZones = async (req, res, next) => {
 
 export const getZoneById = async (req, res, next) => {
   try {
-    const zone = await Zone.findById(req.params.id).populate('clusters state country');
+    const zone = await Zone.findById(req.params.id).populate('cluster districts state country');
     if (!zone) return res.status(404).json({ success: false, message: 'Zone not found' });
 
     res.json({ success: true, data: zone });
@@ -496,23 +543,24 @@ export const getZoneById = async (req, res, next) => {
 
 export const createZone = async (req, res, next) => {
   try {
-    const { name, code, clusters, state, country, description } = req.body;
+    const { name, code, cluster, districts, state, country, description } = req.body;
 
-    if (!name || !clusters || !clusters.length || !state || !country) {
-      return res.status(400).json({ success: false, message: 'Zone name, clusters (array), state and country are required' });
+    if (!name || !cluster || !districts || !districts.length || !state || !country) {
+      return res.status(400).json({ success: false, message: 'Zone name, cluster (single), districts (array), state and country are required' });
     }
 
     const zone = await Zone.create({
       name,
       code,
-      clusters,
+      cluster,
+      districts,
       state,
       country,
       description,
       createdBy: req.user?._id,
     });
 
-    await zone.populate('clusters state country');
+    await zone.populate('cluster districts state country');
     res.status(201).json({ success: true, message: 'Zone created successfully', data: zone });
   } catch (err) {
     next(err);
@@ -521,13 +569,13 @@ export const createZone = async (req, res, next) => {
 
 export const updateZone = async (req, res, next) => {
   try {
-    const { name, code, clusters, state, country, description, isActive } = req.body;
+    const { name, code, cluster, districts, state, country, description, isActive } = req.body;
 
     const zone = await Zone.findByIdAndUpdate(
       req.params.id,
-      { name, code, clusters, state, country, description, isActive, updatedBy: req.user?._id },
+      { name, code, cluster, districts, state, country, description, isActive, updatedBy: req.user?._id },
       { new: true, runValidators: true }
-    ).populate('clusters state country');
+    ).populate('cluster districts state country');
 
     if (!zone) return res.status(404).json({ success: false, message: 'Zone not found' });
 
@@ -692,9 +740,69 @@ export const getZonesHierarchy = async (req, res, next) => {
 
 export const getCitiesHierarchy = async (req, res, next) => {
   try {
-    const { zoneId } = req.query;
-    const data = await locationService.getCitiesByZone(zoneId);
+    const { districtId } = req.query;
+    const data = await locationService.getCitiesByDistrict(districtId);
     res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+};
+// ==================== DUPLICATE CHECK ====================
+
+export const checkDuplicate = async (req, res, next) => {
+  try {
+    const { type, name, parentId, currentId } = req.query;
+
+    if (!type || !name) {
+      return res.status(400).json({ success: false, message: 'Type and name are required' });
+    }
+
+    let model;
+    let query = { name: { $regex: new RegExp(`^${name}$`, 'i') } };
+
+    switch (type) {
+      case 'countries':
+        model = Country;
+        break;
+      case 'states':
+        model = State;
+        if (!parentId) return res.status(400).json({ success: false, message: 'Parent ID is required for state' });
+        query.country = parentId;
+        break;
+      case 'districts':
+        model = District;
+        if (!parentId) return res.status(400).json({ success: false, message: 'Parent ID is required for district' });
+        query.state = parentId;
+        break;
+      case 'clusters':
+        model = Cluster;
+        if (!parentId) return res.status(400).json({ success: false, message: 'Parent ID is required for cluster' });
+        query.state = parentId;
+        break;
+      case 'zones':
+        model = Zone;
+        if (!parentId) return res.status(400).json({ success: false, message: 'Parent ID is required for zone' });
+        query.state = parentId;
+        break;
+      case 'cities':
+        model = City;
+        if (!parentId) return res.status(400).json({ success: false, message: 'Parent ID is required for city' });
+        query.district = parentId;
+        break;
+      default:
+        return res.status(400).json({ success: false, message: 'Invalid location type' });
+    }
+
+    if (currentId) {
+      query._id = { $ne: currentId };
+    }
+
+    const exists = await model.findOne(query);
+
+    res.json({
+      success: true,
+      exists: !!exists,
+    });
   } catch (err) {
     next(err);
   }

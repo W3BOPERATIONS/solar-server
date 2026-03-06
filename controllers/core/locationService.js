@@ -61,11 +61,11 @@ class LocationService {
     }
 
     /**
-     * Get cities by zone
+     * Get cities by district
      */
-    async getCitiesByZone(zoneId) {
+    async getCitiesByDistrict(districtId) {
         const query = { isActive: true };
-        if (zoneId && zoneId !== 'all') query.zones = zoneId;
+        if (districtId && districtId !== 'all') query.district = districtId;
         return await City.find(query).sort({ name: 1 });
     }
 
@@ -87,7 +87,8 @@ class LocationService {
         }
         if (zoneId) {
             const zone = await Zone.findById(zoneId);
-            if (!zone || !zone.clusters.includes(clusterId)) throw new Error('Invalid Zone for selected Cluster');
+            // Zone has cluster (single) and districts (array). We validate if the zone belongs to the cluster.
+            if (!zone || zone.cluster.toString() !== clusterId) throw new Error('Invalid Zone for selected Cluster');
         }
         return true;
     }

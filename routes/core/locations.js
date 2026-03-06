@@ -8,6 +8,7 @@ const router = express.Router();
 router.get('/countries', locationController.getAllCountries);
 router.get('/countries/master', locationController.getAllMasterCountries);
 router.post('/countries/activate', protect, locationController.activateCountry);
+router.get('/check-duplicate', locationController.checkDuplicate);
 router.get('/countries/:id', locationController.getCountryById);
 router.post('/countries', protect, locationController.createCountry);
 router.put('/countries/:id', protect, locationController.updateCountry);
@@ -23,6 +24,7 @@ router.delete('/states/:id', protect, locationController.deleteState);
 // City routes
 router.get('/cities', locationController.getAllCities);
 router.get('/cities/:id', locationController.getCityById);
+router.post('/cities/bulk', protect, locationController.bulkCreateCities);
 router.post('/cities', protect, locationController.createCity);
 router.put('/cities/:id', protect, locationController.updateCity);
 router.delete('/cities/:id', protect, locationController.deleteCity);

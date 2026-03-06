@@ -7,9 +7,14 @@ const zoneSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    clusters: [{
+    cluster: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Cluster',
+      required: true,
+    },
+    districts: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'District',
       required: true,
     }],
     state: {

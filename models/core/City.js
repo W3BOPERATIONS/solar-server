@@ -6,16 +6,7 @@ const citySchema = new mongoose.Schema(
             type: String,
             trim: true,
         },
-        zones: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Zone',
-            required: true,
-        }],
-        cluster: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Cluster',
-            required: true,
-        },
+        // zones and cluster removed as per user request to directly link City to District
         district: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'District',
@@ -60,7 +51,7 @@ const citySchema = new mongoose.Schema(
     }
 );
 
-// Compound index for unique city per zone and area type
-citySchema.index({ name: 1, zones: 1, areaType: 1 }, { unique: true });
+// Compound index for unique city per district and area type
+citySchema.index({ name: 1, district: 1, areaType: 1 }, { unique: true });
 
 export default mongoose.model('City', citySchema);
