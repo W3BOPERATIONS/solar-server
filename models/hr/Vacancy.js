@@ -1,6 +1,11 @@
 import mongoose from 'mongoose';
 
-const candidateTrainingSchema = new mongoose.Schema({
+const vacancySchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: true,
+        trim: true
+    },
     department: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Department',
@@ -8,7 +13,50 @@ const candidateTrainingSchema = new mongoose.Schema({
     },
     position: {
         type: String,
-        required: false
+        required: true
+    },
+    count: {
+        type: Number,
+        required: true,
+        default: 1
+    },
+    experience: {
+        type: String,
+        default: ''
+    },
+    skills: [{
+        type: String
+    }],
+    education: {
+        type: String,
+        default: ''
+    },
+    certifications: {
+        type: String,
+        default: ''
+    },
+    deadline: {
+        type: Date
+    },
+    jobType: {
+        type: String,
+        enum: ['fulltime', 'parttime', 'contract', 'internship'],
+        default: 'fulltime'
+    },
+    description: {
+        type: String,
+        default: ''
+    },
+    responsibilities: {
+        type: String,
+        default: ''
+    },
+    salary: {
+        type: String,
+        default: ''
+    },
+    joiningDate: {
+        type: Date
     },
 
     // Location Scope
@@ -33,24 +81,6 @@ const candidateTrainingSchema = new mongoose.Schema({
         ref: 'City'
     }],
 
-    // Training Sections
-    sections: [{
-        category: {
-            type: String,
-            // enum: ['solarrooftop', 'solarpump', 'solarstreetlight'], // Optional: restrict if needed
-            default: 'solarrooftop'
-        },
-        name: { type: String, required: true },
-        videos: [{
-            url: String, // URL or File path
-            type: {
-                type: String,
-                enum: ['upload', 'youtube'],
-                default: 'youtube'
-            }
-        }]
-    }],
-
     isActive: {
         type: Boolean,
         default: true
@@ -67,4 +97,4 @@ const candidateTrainingSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-export default mongoose.model('CandidateTraining', candidateTrainingSchema);
+export default mongoose.model('Vacancy', vacancySchema);

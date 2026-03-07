@@ -1,0 +1,62 @@
+Found 6 roles
+
+ID: 69abbdeeae7b719fe83357e7
+Name: HR Manager
+Level: Country
+Department ID: 69a2c9c71436adf86ac4c773
+Department Name: HR
+Country: null
+State: null
+Cluster: null
+District: null
+-------------------
+ID: 69abbe17ae7b719fe83357f0
+Name: Finance Manager
+Level: Country
+Department ID: 69a2c9c71436adf86ac4c771
+Department Name: Finance
+Country: null
+State: null
+Cluster: null
+District: null
+-------------------
+ID: 69abd7706d1914fce5852478
+Name: Finance Manager
+Level: Country
+Department ID: 69a2c9c71436adf86ac4c771
+Department Name: Finance
+Country: 69a2a5b376790c4ac681ceb1
+State: 69a2b5552faf8c155fdd2f48
+Cluster: 69a2b59f2faf8c155fdd2fbd
+District: 69a2b5772faf8c155fdd2f6f
+-------------------
+ID: 69abdda7468b0115789565fa
+Name: HR Manager
+Level: Country
+Department ID: 69a2c9c71436adf86ac4c773
+Department Name: HR
+Country: 69a2a3e276790c4ac681ce9e
+State: 69a2a5d476790c4ac681ceba
+Cluster: 69a2aa9a12c7798b2d4be819
+District: 69a2a62876790c4ac681ceeb
+-------------------
+ID: 69abdf3a468b0115789566f1
+Name: Finance Manager
+Level: Country
+Department ID: 69a2c9c71436adf86ac4c771
+Department Name: Finance
+Country: 69a2a3e276790c4ac681ce9e
+State: 69a2a5d476790c4ac681ceba
+Cluster: 69a2a9a912c7798b2d4be76a
+District: 69a2a64876790c4ac681cf11
+-------------------
+ID: 69abe09b468b011578956779
+Name: HR Manager
+Level: Country
+Department ID: 69a2c9c71436adf86ac4c773
+Department Name: HR
+Country: 69a2a5b376790c4ac681ceb1
+State: 69a2b5552faf8c155fdd2f48
+Cluster: 69a2b5b02faf8c155fdd2fe0
+District: 69a2b57f2faf8c155fdd2f82
+-------------------

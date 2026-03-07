@@ -20,4 +20,18 @@ router.post('/trainings', protect, hrmsController.createCandidateTraining);
 router.put('/trainings/:id', protect, hrmsController.updateCandidateTraining);
 router.delete('/trainings/:id', protect, hrmsController.deleteCandidateTraining);
 
+// Vacancies
+router.get('/vacancies', protect, hrmsController.getVacancies);
+router.post('/vacancies', protect, hrmsController.createVacancy);
+router.put('/vacancies/:id', protect, hrmsController.updateVacancy);
+router.delete('/vacancies/:id', protect, hrmsController.deleteVacancy);
+router.post('/vacancies/:vacancyId/candidates', protect, hrmsController.addCandidateToVacancy);
+
+// Candidates
+router.get('/candidates', protect, hrmsController.getAllCandidates);
+router.get('/vacancies/:vacancyId/candidates', protect, hrmsController.getCandidatesByVacancy);
+router.put('/candidates/:candidateId/status', protect, hrmsController.updateCandidateStatus);
+router.post('/candidates/:candidateId/recruit', protect, hrmsController.recruitCandidate);
+router.delete('/candidates/:candidateId', protect, hrmsController.deleteCandidate);
+
 export default router;

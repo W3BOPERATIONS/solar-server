@@ -38,18 +38,26 @@ const candidateTestSchema = new mongoose.Schema({
     },
 
     // Location Scope
+    // Location Scope
+    country: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Country'
+    },
     state: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'State'
     },
-    // Using Cities/Districts arrays to allow multi-selection
+    cluster: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Cluster'
+    },
+    district: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'District'
+    },
     cities: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'City'
-    }],
-    districts: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'District'
     }],
 
     // Questions

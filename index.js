@@ -51,6 +51,8 @@ import solarKitRoutes from './routes/projects/solarKitRoutes.js';
 import dealerManagerRoutes from './routes/dealerManager/dealerManagerRoutes.js';
 import disputeRoutes from './routes/tickets/disputeRoutes.js';
 import orderProcurementSettingRoutes from './routes/settings/orderProcurementSettingRoutes.js';
+import candidatePortalRoutes from './routes/hr/candidatePortalRoutes.js';
+import employeeTrainingRoutes from './routes/hr/employeeTrainingRoutes.js';
 
 dotenv.config();
 
@@ -152,6 +154,8 @@ app.use('/api/solar-kits', solarKitRoutes);
 app.use('/api/dealer-manager', dealerManagerRoutes);
 app.use('/api/disputes', disputeRoutes);
 app.use('/api/settings/order-procurement', orderProcurementSettingRoutes);
+app.use('/api/candidate-portal', candidatePortalRoutes);
+app.use('/api/employee/training', employeeTrainingRoutes);
 
 app.get('/api/health', (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';
@@ -173,7 +177,29 @@ app.get('/', (req, res) => {
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: 'Internal server error' });
+
+  // Handle Mongoose Validation Error
+  if (err.name === 'ValidationError') {
+    const messages = Object.values(err.errors).map(val => val.message);
+    return res.status(400).json({ success: false, message: messages.join(', ') });
+  }
+
+  // Handle Mongoose Cast Error (e.g., invalid ObjectID)
+  if (err.name === 'CastError') {
+    return res.status(400).json({ success: false, message: `Invalid ${err.path}: ${err.value}` });
+  }
+
+  // Handle Mongoose Duplicate Key Error
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyValue)[0];
+    return res.status(400).json({
+      success: false,
+      message: `${field.charAt(0).toUpperCase() + field.slice(1)} already exists. Choose a different name.`,
+      error: err.message
+    });
+  }
+
+  res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
 });
 
 const PORT = process.env.PORT || 5000;

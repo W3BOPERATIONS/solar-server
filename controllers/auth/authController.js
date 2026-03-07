@@ -56,7 +56,13 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: 'Please provide email and password' });
     }
 
-    const user = await User.findOne({ email }).populate({
+    // Log in with either email or phone (since we pass the mobile number in the 'email' field from the frontend login form)
+    const user = await User.findOne({
+      $or: [
+        { email: email },
+        { phone: email }
+      ]
+    }).populate({
       path: 'department',
       populate: {
         path: 'assignedModules.module'

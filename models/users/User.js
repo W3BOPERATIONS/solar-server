@@ -107,6 +107,10 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    trainingCompleted: {
+      type: Boolean,
+      default: false,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',

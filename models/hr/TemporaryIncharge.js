@@ -15,7 +15,7 @@ const temporaryInchargeSchema = new mongoose.Schema(
         department: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Department',
-            required: true
+            required: false
         },
         role: { // The role being taken over
             type: mongoose.Schema.Types.ObjectId,

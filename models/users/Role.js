@@ -5,8 +5,7 @@ const roleSchema = new mongoose.Schema(
         name: {
             type: String,
             required: true,
-            trim: true,
-            unique: true
+            trim: true
         },
         permissions: [{
             type: mongoose.Schema.Types.ObjectId,
@@ -95,5 +94,8 @@ const roleSchema = new mongoose.Schema(
         timestamps: true,
     }
 );
+
+// Ensure name is unique per context
+roleSchema.index({ name: 1, department: 1, country: 1, state: 1, cluster: 1, district: 1 }, { unique: true });
 
 export default mongoose.model('Role', roleSchema);

@@ -20,6 +20,11 @@ const hrmsSettingsSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    settingType: {
+        type: String,
+        enum: ['payroll', 'recruitment', 'performance', 'vacancy', 'test'],
+        required: true
+    },
     payroll: {
         salary: { type: String, default: '' },
         perks: { type: String, default: '' },
@@ -86,7 +91,7 @@ const hrmsSettingsSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-// Compound unique index to prevent duplicate settings for same position in department
-hrmsSettingsSchema.index({ department: 1, position: 1 }, { unique: true });
+// Index for faster lookups (non-unique)
+hrmsSettingsSchema.index({ department: 1, position: 1 });
 
 export default mongoose.model('HRMSSettings', hrmsSettingsSchema);

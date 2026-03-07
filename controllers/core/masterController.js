@@ -9,8 +9,11 @@ import Permission from '../../models/users/Permission.js';
 const createMasterHandler = (Model, name) => ({
     getAll: async (req, res, next) => {
         try {
-            const { isActive } = req.query;
-            const query = isActive !== undefined ? { isActive: isActive === 'true' } : {};
+            const { isActive, ...filters } = req.query;
+            let query = filters || {};
+            if (isActive !== undefined) {
+                query.isActive = isActive === 'true';
+            }
             const items = await Model.find(query).sort({ name: 1 });
             res.json({ success: true, count: items.length, data: items });
         } catch (err) {
