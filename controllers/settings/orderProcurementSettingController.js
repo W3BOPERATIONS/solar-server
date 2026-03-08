@@ -61,7 +61,7 @@ export const getSettingById = async (req, res, next) => {
 // @access  Private
 export const createSetting = async (req, res, next) => {
     try {
-        req.body.createdBy = req.user._id;
+        req.body.createdBy = req.user.id;
 
         const setting = await OrderProcurementSetting.create(req.body);
 
@@ -98,7 +98,7 @@ export const updateSetting = async (req, res, next) => {
             });
         }
 
-        req.body.updatedBy = req.user._id;
+        req.body.updatedBy = req.user.id;
 
         setting = await OrderProcurementSetting.findByIdAndUpdate(
             req.params.id,

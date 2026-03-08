@@ -166,7 +166,7 @@ export const createTemporaryIncharge = async (req, res, next) => {
             startDate,
             endDate,
             reason,
-            createdBy: req.user?._id
+            createdBy: req.user?.id
         });
 
         res.status(201).json({ success: true, message: 'Temporary Incharge assigned', data: newIncharge });
@@ -203,7 +203,10 @@ export const getTemporaryInchargeDashboard = async (req, res, next) => {
             endDate: { $gte: today }
         })
             .sort({ startDate: 1 }) // Soonest first
-            .populate('originalUser');
+            .populate({
+                path: 'originalUser',
+                populate: { path: 'state', select: 'name' }
+            });
 
         const absentUserIds = activeIncharges.map(inc => inc.originalUser?._id?.toString()).filter(Boolean);
 
@@ -217,9 +220,8 @@ export const getTemporaryInchargeDashboard = async (req, res, next) => {
             if (user) {
                 totalAbsent++;
                 // State stats
-                if (user.state) {
-                    stateStats[user.state] = (stateStats[user.state] || 0) + 1;
-                }
+                const stateName = (user.state && (user.state.name || user.state)) || 'Gujarat';
+                stateStats[stateName] = (stateStats[stateName] || 0) + 1;
                 // Cluster stats
                 if (user.cluster) {
                     clusterStats[user.cluster] = (clusterStats[user.cluster] || 0) + 1;
@@ -231,23 +233,58 @@ export const getTemporaryInchargeDashboard = async (req, res, next) => {
         const users = await User.find({ role: { $in: ['admin', 'employee', 'dealerManager', 'franchiseeManager', 'delivery_manager', 'installer'] } })
             .populate('department', 'name')
             .populate('dynamicRole', 'name')
+            .populate('state', 'name')
             .lean();
 
-        const allStateStats = {};
+        const allStateStats = {
+            absent: {},
+            notice: {}
+        };
 
-        // 3. Map users to table format
-        const employeeList = users.map((user, index) => {
-            if (user.state) {
-                allStateStats[user.state] = (allStateStats[user.state] || 0) + 1;
+        let totalNotice = 0;
+        const noticeStateStats = {};
+
+        // 3. Map users to table format and sync statuses
+        const employeeList = await Promise.all(users.map(async (user, index) => {
+            const stateName = (user.state && (user.state.name || user.state)) || 'Gujarat';
+
+            // Check if user has an ACTIVE and VALID incharge record for TODAY
+            const activeInchargeRecord = activeIncharges.find(inc =>
+                inc.originalUser?._id?.toString() === user._id.toString() &&
+                new Date(inc.startDate) <= today &&
+                new Date(inc.endDate) >= today
+            );
+
+            const isCurrentlyAbsent = !!activeInchargeRecord;
+
+            // Sync User.employeeStatus in DB if it's out of sync
+            const expectedStatus = isCurrentlyAbsent ? 'Absent' : 'Present';
+            if (user.employeeStatus !== expectedStatus) {
+                await User.findByIdAndUpdate(user._id, {
+                    employeeStatus: expectedStatus,
+                    temporaryIncharge: isCurrentlyAbsent ? activeInchargeRecord.tempInchargeUser : null
+                });
             }
 
-            const activeInchargeRecord = activeIncharges.find(inc => inc.originalUser?._id?.toString() === user._id.toString());
-            const isCurrentlyAbsent = activeInchargeRecord && new Date(activeInchargeRecord.startDate) <= new Date();
+            // Notice Period Logic
+            const isNoticePeriod = user.status && user.status.toLowerCase() === 'notice period';
 
-            // Mocking days absent, pending tasks, overdue tasks for UI replication
-            const absentDays = isCurrentlyAbsent ? Math.floor(Math.random() * 5) + 1 : 0;
-            const pendingTask = Math.floor(Math.random() * 20);
-            const overdueTask = Math.floor(Math.random() * 10);
+            if (isCurrentlyAbsent) {
+                allStateStats.absent[stateName] = (allStateStats.absent[stateName] || 0) + 1;
+            }
+            if (isNoticePeriod) {
+                totalNotice++;
+                noticeStateStats[stateName] = (noticeStateStats[stateName] || 0) + 1;
+                allStateStats.notice[stateName] = (allStateStats.notice[stateName] || 0) + 1;
+            }
+
+            // Use real data from the User model
+            const absentDays = user.absentDays || 0;
+            const pendingTask = user.pendingTasks || 0;
+            const overdueTask = user.overdueTasks || 0;
+
+            let empStatus = user.employeeStatus || 'Present';
+            if (isNoticePeriod) empStatus = 'Notice Period';
 
             return {
                 _id: user._id,
@@ -256,15 +293,18 @@ export const getTemporaryInchargeDashboard = async (req, res, next) => {
                 email: user.email,
                 department: user.department?.name || '-',
                 position: user.dynamicRole?.name || user.role, // role fallback
-                state: user.state || null,
-                status: isCurrentlyAbsent ? 'Absent' : 'Present',
+                state: stateName,
+                status: empStatus,
+                isNoticePeriod: isNoticePeriod,
+                isAbsent: isCurrentlyAbsent,
                 absentDays: `${absentDays} days`,
+                noticeStatus: isNoticePeriod ? 'Serving Notice' : 'N/A',
                 pendingTask,
                 overdueTask,
                 tempInchargeId: activeInchargeRecord ? activeInchargeRecord.tempInchargeUser : null,
                 action: activeInchargeRecord ? 'N/A' : 'Assign'
             };
-        });
+        }));
 
         // Populate temp incharge names
         const tempInchargeIds = employeeList.map(e => e.tempInchargeId).filter(Boolean);
@@ -287,9 +327,11 @@ export const getTemporaryInchargeDashboard = async (req, res, next) => {
             success: true,
             data: {
                 totalAbsent,
-                stateStats,
+                stateStats, // Absent state stats
+                totalNotice,
+                noticeStateStats,
                 clusterStats,
-                allStateStats,
+                allStateStats, // { absent: {}, notice: {} }
                 employeeList
             }
         });
@@ -383,7 +425,7 @@ export const createEmployee = async (req, res, next) => {
             department: department || null,
             state,
             status: status || 'active',
-            createdBy: req.user?._id
+            createdBy: req.user?.id
         });
 
         const populatedEmployee = await User.findById(newEmployee._id)

@@ -28,8 +28,8 @@ export const createProductPriceHandler = {
                 { product, cluster },
                 {
                     product, cluster, state, price, gst, basePrice,
-                    updatedBy: req.user?._id,
-                    $setOnInsert: { createdBy: req.user?._id }
+                    updatedBy: req.user?.id,
+                    $setOnInsert: { createdBy: req.user?.id }
                 },
                 { new: true, upsert: true, runValidators: true }
             );

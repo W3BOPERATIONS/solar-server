@@ -7,6 +7,8 @@ const router = express.Router();
 // HRMS Settings (Department/Position Config)
 router.get('/settings', protect, hrmsController.getHRMSSettings);
 router.post('/settings', protect, hrmsController.createOrUpdateHRMSSettings);
+router.put('/settings/:id', protect, hrmsController.updateHRMSSettings);
+router.delete('/settings/:id', protect, hrmsController.deleteHRMSSettings);
 
 // Candidate Tests
 router.get('/tests', protect, hrmsController.getCandidateTests);

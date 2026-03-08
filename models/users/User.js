@@ -116,6 +116,29 @@ const userSchema = new mongoose.Schema(
       ref: 'User',
       default: null,
     },
+    // Leave Management & Tracking
+    employeeStatus: {
+      type: String,
+      enum: ['Present', 'Absent'],
+      default: 'Present'
+    },
+    absentDays: {
+      type: Number,
+      default: 0
+    },
+    temporaryIncharge: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
+    pendingTasks: {
+      type: Number,
+      default: 0
+    },
+    overdueTasks: {
+      type: Number,
+      default: 0
+    }
   },
   { timestamps: true }
 );

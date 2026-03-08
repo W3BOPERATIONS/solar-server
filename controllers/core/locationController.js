@@ -43,7 +43,7 @@ export const activateCountry = async (req, res, next) => {
       country = await Country.create({
         name: masterCountry.name,
         isActive: true,
-        createdBy: req.user?._id,
+        createdBy: req.user?.id,
       });
     }
 
@@ -91,7 +91,7 @@ export const createCountry = async (req, res, next) => {
     const country = await Country.create({
       name,
       isActive: true, // Default to active if created manually
-      createdBy: req.user?._id,
+      createdBy: req.user?.id,
     });
 
     res.status(201).json({ success: true, message: 'Country created successfully', data: country });
@@ -106,7 +106,7 @@ export const updateCountry = async (req, res, next) => {
 
     const country = await Country.findByIdAndUpdate(
       req.params.id,
-      { name, isActive, updatedBy: req.user?._id },
+      { name, isActive, updatedBy: req.user?.id },
       { new: true, runValidators: true }
     );
 
@@ -170,7 +170,7 @@ export const createState = async (req, res, next) => {
       code,
       country,
       description,
-      createdBy: req.user?._id,
+      createdBy: req.user?.id,
     });
 
     await state.populate('country');
@@ -186,7 +186,7 @@ export const updateState = async (req, res, next) => {
 
     const state = await State.findByIdAndUpdate(
       req.params.id,
-      { name, code, country, description, isActive, updatedBy: req.user?._id },
+      { name, code, country, description, isActive, updatedBy: req.user?.id },
       { new: true, runValidators: true }
     ).populate('country');
 
@@ -255,7 +255,7 @@ export const createCity = async (req, res, next) => {
       areaType,
       pincodes,
       description,
-      createdBy: req.user?._id,
+      createdBy: req.user?.id,
     });
 
     await city.populate('district state country');
@@ -282,7 +282,7 @@ export const bulkCreateCities = async (req, res, next) => {
       areaType: city.areaType || 'Urban',
       pincodes: city.pincodes || [],
       description: city.description,
-      createdBy: req.user?._id,
+      createdBy: req.user?.id,
     }));
 
     // Verify all minimum required fields are present in every row
@@ -314,7 +314,7 @@ export const updateCity = async (req, res, next) => {
 
     const city = await City.findByIdAndUpdate(
       req.params.id,
-      { name, district, state, country, areaType, pincodes, description, isActive, updatedBy: req.user?._id },
+      { name, district, state, country, areaType, pincodes, description, isActive, updatedBy: req.user?.id },
       { new: true, runValidators: true }
     ).populate('district state country');
 
@@ -388,7 +388,7 @@ export const createDistrict = async (req, res, next) => {
       state,
       country,
       description,
-      createdBy: req.user?._id,
+      createdBy: req.user?.id,
     });
 
     await district.populate('state country');
@@ -404,7 +404,7 @@ export const updateDistrict = async (req, res, next) => {
 
     const district = await District.findByIdAndUpdate(
       req.params.id,
-      { name, code, state, country, description, isActive, updatedBy: req.user?._id },
+      { name, code, state, country, description, isActive, updatedBy: req.user?.id },
       { new: true, runValidators: true }
     ).populate('state country');
 
@@ -472,7 +472,7 @@ export const createCluster = async (req, res, next) => {
       state,
       country,
       description,
-      createdBy: req.user?._id,
+      createdBy: req.user?.id,
     });
 
     await cluster.populate('districts state country');
@@ -488,7 +488,7 @@ export const updateCluster = async (req, res, next) => {
 
     const cluster = await Cluster.findByIdAndUpdate(
       req.params.id,
-      { name, code, districts, state, country, description, isActive, updatedBy: req.user?._id },
+      { name, code, districts, state, country, description, isActive, updatedBy: req.user?.id },
       { new: true, runValidators: true }
     ).populate('districts state country');
 
@@ -557,7 +557,7 @@ export const createZone = async (req, res, next) => {
       state,
       country,
       description,
-      createdBy: req.user?._id,
+      createdBy: req.user?.id,
     });
 
     await zone.populate('cluster districts state country');
@@ -573,7 +573,7 @@ export const updateZone = async (req, res, next) => {
 
     const zone = await Zone.findByIdAndUpdate(
       req.params.id,
-      { name, code, cluster, districts, state, country, description, isActive, updatedBy: req.user?._id },
+      { name, code, cluster, districts, state, country, description, isActive, updatedBy: req.user?.id },
       { new: true, runValidators: true }
     ).populate('cluster districts state country');
 
@@ -648,7 +648,7 @@ export const createArea = async (req, res, next) => {
       country,
       pincodes,
       description,
-      createdBy: req.user?._id,
+      createdBy: req.user?.id,
     });
 
     await area.populate('district cluster state country');
@@ -664,7 +664,7 @@ export const updateArea = async (req, res, next) => {
 
     const area = await Area.findByIdAndUpdate(
       req.params.id,
-      { name, code, district, cluster, state, country, pincodes, description, isActive, updatedBy: req.user?._id },
+      { name, code, district, cluster, state, country, pincodes, description, isActive, updatedBy: req.user?.id },
       { new: true, runValidators: true }
     ).populate('district cluster state country');
 

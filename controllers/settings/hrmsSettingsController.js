@@ -10,11 +10,15 @@ import bcryptjs from 'bcryptjs';
 
 export const getHRMSSettings = async (req, res, next) => {
     try {
-        const { department, position } = req.query;
+        const { department, position, country, state, cluster, district } = req.query;
         const query = { isActive: true };
 
         if (department) query.department = department; // ID
         if (position) query.position = position;
+        if (country) query.country = country;
+        if (state) query.state = state;
+        if (cluster) query.cluster = cluster;
+        if (district) query.district = district;
 
         const settings = await HRMSSettings.find(query)
             .populate('department', 'name')
@@ -33,7 +37,7 @@ export const createOrUpdateHRMSSettings = async (req, res, next) => {
         const updateData = {
             department,
             position,
-            updatedBy: req.user?._id
+            updatedBy: req.user?.id
         };
 
         if (payroll) updateData.payroll = payroll;
@@ -46,10 +50,57 @@ export const createOrUpdateHRMSSettings = async (req, res, next) => {
         const settings = await HRMSSettings.create({
             ...updateData,
             ...req.body,
-            createdBy: req.user?._id
+            createdBy: req.user?.id
         });
 
         res.json({ success: true, message: 'Settings saved successfully', data: settings });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const updateHRMSSettings = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { department, position, payroll, recruitment, performance, vacancy, test } = req.body;
+
+        const updateData = {
+            ...req.body,
+            updatedBy: req.user?.id
+        };
+
+        const settings = await HRMSSettings.findByIdAndUpdate(
+            id,
+            updateData,
+            { new: true }
+        );
+
+        if (!settings) {
+            return res.status(404).json({ success: false, message: 'Settings not found' });
+        }
+
+        res.json({ success: true, message: 'Settings updated successfully', data: settings });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const deleteHRMSSettings = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        // Soft delete
+        const settings = await HRMSSettings.findByIdAndUpdate(
+            id,
+            { isActive: false, updatedBy: req.user?.id },
+            { new: true }
+        );
+
+        if (!settings) {
+            return res.status(404).json({ success: false, message: 'Settings not found' });
+        }
+
+        res.json({ success: true, message: 'Settings deleted successfully' });
     } catch (err) {
         next(err);
     }
@@ -87,7 +138,7 @@ export const createCandidateTest = async (req, res, next) => {
     try {
         const test = await CandidateTest.create({
             ...req.body,
-            createdBy: req.user?._id
+            createdBy: req.user?.id
         });
         res.status(201).json({ success: true, message: 'Test created successfully', data: test });
     } catch (err) {
@@ -99,7 +150,7 @@ export const updateCandidateTest = async (req, res, next) => {
     try {
         const test = await CandidateTest.findByIdAndUpdate(
             req.params.id,
-            { ...req.body, updatedBy: req.user?._id },
+            { ...req.body, updatedBy: req.user?.id },
             { new: true }
         );
         if (!test) return res.status(404).json({ success: false, message: 'Test not found' });
@@ -113,7 +164,7 @@ export const deleteCandidateTest = async (req, res, next) => {
     try {
         const test = await CandidateTest.findByIdAndUpdate(
             req.params.id,
-            { isActive: false, updatedBy: req.user?._id },
+            { isActive: false, updatedBy: req.user?.id },
             { new: true }
         ); // Soft delete
         if (!test) return res.status(404).json({ success: false, message: 'Test not found' });
@@ -156,7 +207,7 @@ export const createCandidateTraining = async (req, res, next) => {
     try {
         const training = await CandidateTraining.create({
             ...req.body,
-            createdBy: req.user?._id
+            createdBy: req.user?.id
         });
         res.status(201).json({ success: true, message: 'Training created successfully', data: training });
     } catch (err) {
@@ -168,7 +219,7 @@ export const updateCandidateTraining = async (req, res, next) => {
     try {
         const training = await CandidateTraining.findByIdAndUpdate(
             req.params.id,
-            { ...req.body, updatedBy: req.user?._id },
+            { ...req.body, updatedBy: req.user?.id },
             { new: true }
         );
         if (!training) return res.status(404).json({ success: false, message: 'Training not found' });
@@ -182,7 +233,7 @@ export const deleteCandidateTraining = async (req, res, next) => {
     try {
         const training = await CandidateTraining.findByIdAndUpdate(
             req.params.id,
-            { isActive: false, updatedBy: req.user?._id },
+            { isActive: false, updatedBy: req.user?.id },
             { new: true }
         ); // Soft delete
         if (!training) return res.status(404).json({ success: false, message: 'Training not found' });
@@ -225,7 +276,7 @@ export const createVacancy = async (req, res, next) => {
     try {
         const vacancy = await Vacancy.create({
             ...req.body,
-            createdBy: req.user?._id
+            createdBy: req.user?.id
         });
         res.status(201).json({ success: true, message: 'Vacancy created successfully', data: vacancy });
     } catch (err) {
@@ -237,7 +288,7 @@ export const updateVacancy = async (req, res, next) => {
     try {
         const vacancy = await Vacancy.findByIdAndUpdate(
             req.params.id,
-            { ...req.body, updatedBy: req.user?._id },
+            { ...req.body, updatedBy: req.user?.id },
             { new: true }
         );
         if (!vacancy) return res.status(404).json({ success: false, message: 'Vacancy not found' });
@@ -251,7 +302,7 @@ export const deleteVacancy = async (req, res, next) => {
     try {
         const vacancy = await Vacancy.findByIdAndUpdate(
             req.params.id,
-            { isActive: false, updatedBy: req.user?._id },
+            { isActive: false, updatedBy: req.user?.id },
             { new: true }
         ); // Soft delete
         if (!vacancy) return res.status(404).json({ success: false, message: 'Vacancy not found' });
@@ -389,6 +440,7 @@ export const recruitCandidate = async (req, res, next) => {
                 role: 'employee',
                 trainingCompleted: false,
                 department: candidate.vacancy?.department,
+                state: candidate.vacancy?.state || '69aa2a5d476790c4ac681ceba', // Fallback to Gujarat ID
                 isActive: true
             });
         }
@@ -418,11 +470,12 @@ export const getAllCandidates = async (req, res, next) => {
         const candidates = await Candidate.find(query)
             .populate({
                 path: 'vacancy',
-                select: 'title department joiningDate',
-                populate: {
-                    path: 'department',
-                    select: 'name'
-                }
+                select: 'title department joiningDate state cluster',
+                populate: [
+                    { path: 'department', select: 'name' },
+                    { path: 'state', select: 'name' },
+                    { path: 'cluster', select: 'name' }
+                ]
             })
             .sort({ createdAt: -1 });
 

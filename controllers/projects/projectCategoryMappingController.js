@@ -40,7 +40,7 @@ export const createMapping = async (req, res, next) => {
             projectTypeFrom,
             projectTypeTo,
             subProjectTypeId,
-            createdBy: req.user?._id
+            createdBy: req.user?.id
         });
 
         await mapping.populate('stateId clusterId categoryId subCategoryId subProjectTypeId');
@@ -69,7 +69,7 @@ export const updateMapping = async (req, res, next) => {
                 projectTypeTo,
                 subProjectTypeId,
                 status,
-                updatedBy: req.user?._id
+                updatedBy: req.user?.id
             },
             { new: true, runValidators: true }
         ).populate('stateId clusterId categoryId subCategoryId subProjectTypeId');

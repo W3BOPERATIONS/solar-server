@@ -20,7 +20,7 @@ export const createProjectType = async (req, res, next) => {
 
         const type = await ProjectType.create({
             name,
-            createdBy: req.user?._id
+            createdBy: req.user?.id
         });
 
         res.status(201).json({ success: true, message: 'Project Type created successfully', data: type });
@@ -35,7 +35,7 @@ export const updateProjectType = async (req, res, next) => {
 
         const type = await ProjectType.findByIdAndUpdate(
             req.params.id,
-            { name, status, updatedBy: req.user?._id },
+            { name, status, updatedBy: req.user?.id },
             { new: true, runValidators: true }
         );
 

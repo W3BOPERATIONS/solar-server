@@ -28,7 +28,7 @@ export const createSKU = async (req, res, next) => {
             productType,
             technology,
             wattage,
-            createdBy: req.user?._id
+            createdBy: req.user?.id
         });
 
         res.status(201).json({ success: true, message: 'SKU created successfully', data: sku });
@@ -43,7 +43,7 @@ export const updateSKU = async (req, res, next) => {
 
         const sku = await SKU.findByIdAndUpdate(
             req.params.id,
-            { skuCode, description, status, brand, category, projectType, productType, technology, wattage, updatedBy: req.user?._id },
+            { skuCode, description, status, brand, category, projectType, productType, technology, wattage, updatedBy: req.user?.id },
             { new: true, runValidators: true }
         );
 

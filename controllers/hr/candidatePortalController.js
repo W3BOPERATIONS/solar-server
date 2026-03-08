@@ -3,6 +3,7 @@ import Vacancy from '../../models/hr/Vacancy.js';
 import CandidateTest from '../../models/hr/CandidateTest.js';
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import User from '../../models/users/User.js';
 
 const generateToken = (id) => {
     return jwt.sign({ id, role: 'candidate' }, process.env.JWT_SECRET, { expiresIn: '30d' });
@@ -224,7 +225,7 @@ export const submitApplication = async (req, res, next) => {
 // @access  Private (Candidate)
 export const signAgreement = async (req, res, next) => {
     try {
-        const candidate = await Candidate.findById(req.user.id);
+        const candidate = await Candidate.findById(req.user.id).populate('vacancy');
 
         if (!candidate) {
             return res.status(404).json({ success: false, message: 'Candidate not found' });
@@ -237,6 +238,30 @@ export const signAgreement = async (req, res, next) => {
         candidate.employmentAgreementSigned = true;
         candidate.status = 'Joined';
         await candidate.save();
+
+        // Create ERP User if not already exists
+        let user = null;
+        if (candidate.email) {
+            user = await User.findOne({ email: candidate.email });
+        }
+        if (!user && candidate.mobile) {
+            user = await User.findOne({ phone: candidate.mobile });
+        }
+
+        if (!user) {
+            const rawPassword = candidate.mobile || 'password123';
+            await User.create({
+                name: candidate.name,
+                email: candidate.email || `${candidate.mobile}@temp.com`,
+                phone: candidate.mobile,
+                password: rawPassword,
+                role: 'employee',
+                trainingCompleted: false,
+                department: candidate.vacancy?.department,
+                state: candidate.vacancy?.state || '69aa2a5d476790c4ac681ceba', // Fallback Gujarat
+                isActive: true
+            });
+        }
 
         res.json({ success: true, message: 'Agreement signed successfully', status: candidate.status });
     } catch (err) {

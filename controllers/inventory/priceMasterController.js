@@ -40,7 +40,7 @@ export const createPriceMaster = async (req, res, next) => {
             tax,
             discount,
             finalPrice,
-            createdBy: req.user?._id
+            createdBy: req.user?.id
         });
 
         await price.populate('productId stateId clusterId');
@@ -60,14 +60,14 @@ export const updatePriceMaster = async (req, res, next) => {
         if (req.params.id) {
             price = await PriceMaster.findByIdAndUpdate(
                 req.params.id,
-                { productId, stateId, clusterId, technology: technology || '', basePrice, tax, discount, finalPrice, status, updatedBy: req.user?._id },
+                { productId, stateId, clusterId, technology: technology || '', basePrice, tax, discount, finalPrice, status, updatedBy: req.user?.id },
                 { new: true, runValidators: true }
             );
         } else if (productId && stateId && clusterId) {
             // Fallback if needed: update by product/state/cluster combo
             price = await PriceMaster.findOneAndUpdate(
                 { productId, stateId, clusterId, technology: technology || '' },
-                { basePrice, tax, discount, finalPrice, status, updatedBy: req.user?._id },
+                { basePrice, tax, discount, finalPrice, status, updatedBy: req.user?.id },
                 { new: true, runValidators: true }
             );
         }

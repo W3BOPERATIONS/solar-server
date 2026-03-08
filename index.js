@@ -53,6 +53,7 @@ import disputeRoutes from './routes/tickets/disputeRoutes.js';
 import orderProcurementSettingRoutes from './routes/settings/orderProcurementSettingRoutes.js';
 import candidatePortalRoutes from './routes/hr/candidatePortalRoutes.js';
 import employeeTrainingRoutes from './routes/hr/employeeTrainingRoutes.js';
+import leaveApprovalRoutes from './routes/hr/leaveApprovalRoutes.js';
 
 dotenv.config();
 
@@ -156,6 +157,7 @@ app.use('/api/disputes', disputeRoutes);
 app.use('/api/settings/order-procurement', orderProcurementSettingRoutes);
 app.use('/api/candidate-portal', candidatePortalRoutes);
 app.use('/api/employee/training', employeeTrainingRoutes);
+app.use('/api/leave-approvals', leaveApprovalRoutes);
 
 app.get('/api/health', (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';

@@ -160,7 +160,7 @@ export const updateCampaignConfig = async (req, res, next) => {
                 config.markModified('campaignTypes');
             }
         }
-        config.updatedBy = req.user?._id;
+        config.updatedBy = req.user?.id;
         await config.save();
         res.json({ success: true, message: 'Settings updated successfully', data: config });
     } catch (err) {
@@ -186,7 +186,7 @@ export const createSocialCampaign = async (req, res, next) => {
     try {
         const campaign = await SocialMediaCampaign.create({
             ...req.body,
-            createdBy: req.user?._id
+            createdBy: req.user?.id
         });
         await campaign.populate(['state', 'cluster']);
         res.status(201).json({ success: true, data: campaign });

@@ -87,12 +87,12 @@ export const saveDepartmentModules = async (req, res) => {
                         $set: {
                             accessLevel: mapping.accessLevel,
                             enabled: mapping.enabled,
-                            updatedBy: req.user?._id
+                            updatedBy: req.user?.id
                         },
                         $setOnInsert: {
                             departmentId,
                             moduleId: moduleId,
-                            createdBy: req.user?._id
+                            createdBy: req.user?.id
                         }
                     },
                     upsert: true
@@ -160,6 +160,23 @@ export const getAllDepartmentStats = async (req, res) => {
         res.status(200).json({ success: true, stats: formattedStats });
     } catch (error) {
         console.error('Error fetching all stats:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// Delete a module access mapping
+export const deleteDepartmentModule = async (req, res) => {
+    try {
+        const { mappingId } = req.params;
+        const result = await DepartmentModuleAccess.findByIdAndDelete(mappingId);
+
+        if (!result) {
+            return res.status(404).json({ success: false, message: 'Module mapping not found' });
+        }
+
+        res.status(200).json({ success: true, message: 'Module removed successfully' });
+    } catch (error) {
+        console.error('Error deleting mapping:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };

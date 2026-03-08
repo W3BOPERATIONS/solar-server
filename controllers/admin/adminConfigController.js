@@ -30,7 +30,7 @@ export const upsertConfig = async (req, res, next) => {
         section,
         key,
         data: data || {},
-        updatedBy: req.user?._id || null,
+        updatedBy: req.user?.id || null,
       },
       {
         new: true,

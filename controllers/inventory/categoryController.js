@@ -23,7 +23,7 @@ export const createCategory = async (req, res, next) => {
             name,
             projectTypeId,
             description,
-            createdBy: req.user?._id
+            createdBy: req.user?.id
         });
 
         await category.populate('projectTypeId');
@@ -40,7 +40,7 @@ export const updateCategory = async (req, res, next) => {
 
         const category = await Category.findByIdAndUpdate(
             req.params.id,
-            { name, projectTypeId, description, status, updatedBy: req.user?._id },
+            { name, projectTypeId, description, status, updatedBy: req.user?.id },
             { new: true, runValidators: true }
         );
 

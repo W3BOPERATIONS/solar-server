@@ -22,8 +22,8 @@ const hrmsSettingsSchema = new mongoose.Schema({
     },
     settingType: {
         type: String,
-        enum: ['payroll', 'recruitment', 'performance', 'vacancy', 'test'],
-        required: true
+        enum: ['payroll', 'recruitment', 'performance', 'vacancy', 'test', 'unified'],
+        default: 'unified'
     },
     payroll: {
         salary: { type: String, default: '' },
@@ -40,7 +40,8 @@ const hrmsSettingsSchema = new mongoose.Schema({
         cpOnboardingGoal: { type: String, default: '' },
         leaves: { type: String, default: '' },
         performanceLoginTime: { type: String, default: '' },
-        performanceWorkingHours: { type: Number, default: 8 }
+        performanceWorkingHours: { type: Number, default: 8 },
+        yearlyFreeLeave: { type: String, default: '' }
     },
     recruitment: {
         probation: { type: String, default: '' },
@@ -74,6 +75,23 @@ const hrmsSettingsSchema = new mongoose.Schema({
     },
     test: {
         selectedTests: [{ type: String }]
+    },
+    // Location Scope
+    country: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Country'
+    },
+    state: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'State'
+    },
+    cluster: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Cluster'
+    },
+    district: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'District'
     },
     isActive: {
         type: Boolean,

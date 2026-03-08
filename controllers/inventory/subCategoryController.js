@@ -25,7 +25,7 @@ export const createSubCategory = async (req, res, next) => {
             projectTypeId,
             categoryId,
             description,
-            createdBy: req.user?._id || req.user?.id
+            createdBy: req.user?.id || req.user?.id
         });
 
         await subCategory.populate(['projectTypeId', 'categoryId']);
@@ -42,7 +42,7 @@ export const updateSubCategory = async (req, res, next) => {
 
         const subCategory = await SubCategory.findByIdAndUpdate(
             req.params.id,
-            { name, projectTypeId, categoryId, description, status, updatedBy: req.user?._id || req.user?.id },
+            { name, projectTypeId, categoryId, description, status, updatedBy: req.user?.id || req.user?.id },
             { new: true, runValidators: true }
         );
 

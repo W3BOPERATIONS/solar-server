@@ -96,7 +96,7 @@ export const createProduct = async (req, res, next) => {
       electricalParameters,
       skuParameters,
       description,
-      createdBy: req.user?._id
+      createdBy: req.user?.id
     });
 
     await product.populate('categoryId subCategoryId projectTypeId subProjectTypeId brandId unitId skuId stateId cityId districtId clusterId');
@@ -143,7 +143,7 @@ export const updateProduct = async (req, res, next) => {
         mechanicalParameters,
         electricalParameters,
         skuParameters,
-        updatedBy: req.user?._id
+        updatedBy: req.user?.id
       },
       { new: true, runValidators: true }
     );

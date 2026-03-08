@@ -23,7 +23,7 @@ export const createUnit = async (req, res, next) => {
             symbol,
             unitType,
             description,
-            createdBy: req.user?._id
+            createdBy: req.user?.id
         });
 
         res.status(201).json({ success: true, message: 'Unit created successfully', data: unit });
@@ -38,7 +38,7 @@ export const updateUnit = async (req, res, next) => {
 
         const unit = await Unit.findByIdAndUpdate(
             req.params.id,
-            { unitName, symbol, unitType, description, status, updatedBy: req.user?._id },
+            { unitName, symbol, unitType, description, status, updatedBy: req.user?.id },
             { new: true, runValidators: true }
         );
 

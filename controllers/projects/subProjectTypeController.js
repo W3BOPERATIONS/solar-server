@@ -23,7 +23,7 @@ export const createSubProjectType = async (req, res, next) => {
             name,
             projectTypeId,
             description,
-            createdBy: req.user?._id || req.user?.id
+            createdBy: req.user?.id || req.user?.id
         });
 
         await subProjectType.populate('projectTypeId');
@@ -40,7 +40,7 @@ export const updateSubProjectType = async (req, res, next) => {
 
         const subProjectType = await SubProjectType.findByIdAndUpdate(
             req.params.id,
-            { name, projectTypeId, description, status, updatedBy: req.user?._id || req.user?.id },
+            { name, projectTypeId, description, status, updatedBy: req.user?.id || req.user?.id },
             { new: true, runValidators: true }
         );
 

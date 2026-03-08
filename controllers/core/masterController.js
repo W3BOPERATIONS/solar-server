@@ -31,7 +31,7 @@ const createMasterHandler = (Model, name) => ({
     },
     create: async (req, res, next) => {
         try {
-            const item = await Model.create({ ...req.body, createdBy: req.user?._id });
+            const item = await Model.create({ ...req.body, createdBy: req.user?.id });
             res.status(201).json({ success: true, message: `${name} created successfully`, data: item });
         } catch (err) {
             next(err);
@@ -41,7 +41,7 @@ const createMasterHandler = (Model, name) => ({
         try {
             const item = await Model.findByIdAndUpdate(
                 req.params.id,
-                { ...req.body, updatedBy: req.user?._id },
+                { ...req.body, updatedBy: req.user?.id },
                 { new: true, runValidators: true }
             );
             if (!item) return res.status(404).json({ success: false, message: `${name} not found` });

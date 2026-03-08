@@ -287,7 +287,7 @@ export const signProject = async (req, res, next) => {
 
         // Update Lead status
         lead.status = 'ProjectSigned';
-        lead.history.push({ action: 'Project Signed & Created', by: req.user?._id });
+        lead.history.push({ action: 'Project Signed & Created', by: req.user?.id });
         await lead.save();
 
         res.status(201).json({ success: true, message: 'Project signed and created successfully', data: project });

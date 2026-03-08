@@ -96,7 +96,7 @@ export const createOrder = async (req, res, next) => {
             state,
             city,
             district,
-            createdBy: req.user._id
+            createdBy: req.user.id
         });
 
         // Populate for response
@@ -150,7 +150,7 @@ export const updateOrder = async (req, res, next) => {
         order.state = state || order.state;
         order.city = city || order.city;
         order.district = district || order.district;
-        order.updatedBy = req.user._id;
+        order.updatedBy = req.user.id;
 
         await order.save();
 
@@ -188,7 +188,7 @@ export const updateOrderStatus = async (req, res, next) => {
 
         const order = await ProcurementOrder.findByIdAndUpdate(
             req.params.id,
-            { status, updatedBy: req.user._id },
+            { status, updatedBy: req.user.id },
             { new: true }
         );
 
