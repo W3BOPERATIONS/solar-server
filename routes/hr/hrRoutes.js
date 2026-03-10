@@ -10,10 +10,15 @@ import {
     getTemporaryIncharges,
     seedSystemModules,
     getTemporaryInchargeDashboard,
+    updateTemporaryIncharge,
     getEmployees,
     createEmployee,
     updateEmployee,
-    deleteEmployee
+    deleteEmployee,
+    createResignationRequest,
+    getResignationRequests,
+    approveResignation,
+    rejectResignation
 } from '../../controllers/hr/hrController.js';
 
 const router = express.Router();
@@ -32,6 +37,7 @@ router.get('/department/:departmentId/modules', getDepartmentModules);
 
 // Temporary Incharge
 router.post('/temporary-incharge', createTemporaryIncharge);
+router.put('/temporary-incharge/:id', updateTemporaryIncharge);
 router.get('/temporary-incharge', getTemporaryIncharges);
 router.get('/temporary-incharge/dashboard', getTemporaryInchargeDashboard);
 
@@ -40,5 +46,11 @@ router.get('/employees', getEmployees);
 router.post('/employees', createEmployee);
 router.put('/employees/:id', updateEmployee);
 router.delete('/employees/:id', deleteEmployee);
+
+// Resignation Management
+router.post('/resignations', createResignationRequest);
+router.get('/resignations', getResignationRequests);
+router.put('/resignations/:id/approve', approveResignation);
+router.put('/resignations/:id/reject', rejectResignation);
 
 export default router;

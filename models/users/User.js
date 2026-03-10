@@ -80,7 +80,7 @@ const userSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['active', 'inactive', 'pending', 'approved', 'rejected'],
+      enum: ['active', 'inactive', 'pending', 'approved', 'rejected', 'Notice Period', 'Resigned'],
       default: 'pending',
     },
     profileImage: {

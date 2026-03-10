@@ -28,7 +28,14 @@ export const getModules = async (req, res) => {
 export const getDepartmentModules = async (req, res) => {
     try {
         const { departmentId } = req.params;
-        const accessList = await DepartmentModuleAccess.find({ departmentId }).populate('moduleId', 'name key defaultLevel');
+        const { level } = req.query;
+
+        let query = { departmentId };
+        if (level) {
+            query.accessLevel = level.toLowerCase();
+        }
+
+        const accessList = await DepartmentModuleAccess.find(query).populate('moduleId', 'name key defaultLevel description');
         res.status(200).json({ success: true, accessList });
     } catch (error) {
         console.error('Error fetching department modules:', error);

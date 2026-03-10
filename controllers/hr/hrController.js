@@ -3,6 +3,7 @@ import Role from '../../models/users/Role.js';
 import Module from '../../models/hr/Module.js';
 import TemporaryIncharge from '../../models/hr/TemporaryIncharge.js';
 import User from '../../models/users/User.js';
+import Resignation from '../../models/hr/Resignation.js';
 
 // --- Department Modules Logic ---
 
@@ -175,6 +176,32 @@ export const createTemporaryIncharge = async (req, res, next) => {
     }
 };
 
+export const updateTemporaryIncharge = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { tempInchargeUser, department, startDate, endDate, reason } = req.body;
+
+        // Basic validations
+        if (new Date(startDate) >= new Date(endDate)) {
+            return res.status(400).json({ success: false, message: 'End date must be after start date' });
+        }
+
+        const updatedIncharge = await TemporaryIncharge.findByIdAndUpdate(
+            id,
+            { tempInchargeUser, department, startDate, endDate, reason },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedIncharge) {
+            return res.status(404).json({ success: false, message: 'Temporary Incharge record not found' });
+        }
+
+        res.json({ success: true, message: 'Temporary Incharge updated successfully', data: updatedIncharge });
+    } catch (err) {
+        next(err);
+    }
+};
+
 export const getTemporaryIncharges = async (req, res, next) => {
     try {
         // Can filter by department or user via query params
@@ -236,6 +263,11 @@ export const getTemporaryInchargeDashboard = async (req, res, next) => {
             .populate('state', 'name')
             .lean();
 
+        // 3. Fetch active resignations for Notice Period logic
+        const activeResignations = await Resignation.find({
+            status: 'Approved'
+        }).lean();
+
         const allStateStats = {
             absent: {},
             notice: {}
@@ -267,7 +299,38 @@ export const getTemporaryInchargeDashboard = async (req, res, next) => {
             }
 
             // Notice Period Logic
-            const isNoticePeriod = user.status && user.status.toLowerCase() === 'notice period';
+            let isNoticePeriod = user.status && user.status.toLowerCase() === 'notice period';
+            let remainingNoticeDays = null;
+            let empStatus = expectedStatus;
+
+            const activeResignation = activeResignations.find(res => res.employee.toString() === user._id.toString());
+
+            if (activeResignation) {
+                const lwd = new Date(activeResignation.lastWorkingDate);
+                // Reset time for accurate day comparison
+                lwd.setHours(0, 0, 0, 0);
+                const todayCurrent = new Date();
+                todayCurrent.setHours(0, 0, 0, 0);
+
+                if (todayCurrent > lwd) {
+                    // Update user to Resigned if lwd has passed
+                    await User.findByIdAndUpdate(user._id, { status: 'Resigned' });
+                    empStatus = 'Resigned';
+                    isNoticePeriod = false;
+
+                    // Also mark resignation as completed
+                    await Resignation.findByIdAndUpdate(activeResignation._id, { status: 'Completed' });
+                } else {
+                    isNoticePeriod = true;
+                    empStatus = 'Notice Period';
+                    const diffTime = lwd - todayCurrent;
+                    remainingNoticeDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                    if (user.status !== 'Notice Period') {
+                        await User.findByIdAndUpdate(user._id, { status: 'Notice Period' });
+                    }
+                }
+            }
 
             if (isCurrentlyAbsent) {
                 allStateStats.absent[stateName] = (allStateStats.absent[stateName] || 0) + 1;
@@ -283,9 +346,6 @@ export const getTemporaryInchargeDashboard = async (req, res, next) => {
             const pendingTask = user.pendingTasks || 0;
             const overdueTask = user.overdueTasks || 0;
 
-            let empStatus = user.employeeStatus || 'Present';
-            if (isNoticePeriod) empStatus = 'Notice Period';
-
             return {
                 _id: user._id,
                 employeeId: `EMP` + String(index + 1).padStart(3, '0'),
@@ -298,10 +358,14 @@ export const getTemporaryInchargeDashboard = async (req, res, next) => {
                 isNoticePeriod: isNoticePeriod,
                 isAbsent: isCurrentlyAbsent,
                 absentDays: `${absentDays} days`,
-                noticeStatus: isNoticePeriod ? 'Serving Notice' : 'N/A',
+                noticeStatus: isNoticePeriod ? `${remainingNoticeDays} Days` : 'N/A',
+                remainingNoticeDays,
                 pendingTask,
                 overdueTask,
                 tempInchargeId: activeInchargeRecord ? activeInchargeRecord.tempInchargeUser : null,
+                inchargeRecordId: activeInchargeRecord ? activeInchargeRecord._id : null,
+                startDate: activeInchargeRecord ? activeInchargeRecord.startDate : null,
+                endDate: activeInchargeRecord ? activeInchargeRecord.endDate : null,
                 action: activeInchargeRecord ? 'N/A' : 'Assign'
             };
         }));
@@ -332,7 +396,7 @@ export const getTemporaryInchargeDashboard = async (req, res, next) => {
                 noticeStateStats,
                 clusterStats,
                 allStateStats, // { absent: {}, notice: {} }
-                employeeList
+                employeeList: employeeList.filter(e => e.status !== 'Resigned')
             }
         });
     } catch (err) {
@@ -476,6 +540,96 @@ export const deleteEmployee = async (req, res, next) => {
         }
 
         res.json({ success: true, message: 'Employee deleted successfully' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// --- Resignation Logic ---
+
+export const createResignationRequest = async (req, res, next) => {
+    try {
+        const { employee, department, position, resignationDate, noticePeriodDays, lastWorkingDate, reason } = req.body;
+
+        if (!employee || !resignationDate || noticePeriodDays == null || !lastWorkingDate) {
+            return res.status(400).json({ success: false, message: 'Missing required fields for resignation.' });
+        }
+
+        const newResignation = await Resignation.create({
+            employee,
+            department: department || null,
+            position,
+            resignationDate,
+            noticePeriodDays,
+            lastWorkingDate,
+            reason,
+            createdBy: req.user?.id
+        });
+
+        res.status(201).json({ success: true, message: 'Resignation request created successfully', data: newResignation });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getResignationRequests = async (req, res, next) => {
+    try {
+        const requests = await Resignation.find()
+            .populate('employee', 'name userId phone role')
+            .populate('department', 'name')
+            .sort({ createdAt: -1 });
+
+        res.json({ success: true, count: requests.length, data: requests });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const approveResignation = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const resignation = await Resignation.findById(id);
+        if (!resignation) {
+            return res.status(404).json({ success: false, message: 'Resignation request not found' });
+        }
+
+        if (resignation.status !== 'Pending') {
+            return res.status(400).json({ success: false, message: `Cannot approve request with status: ${resignation.status}` });
+        }
+
+        resignation.status = 'Approved';
+        await resignation.save();
+
+        // Update User Status to Notice Period
+        await User.findByIdAndUpdate(resignation.employee, { status: 'Notice Period' });
+
+        res.json({ success: true, message: 'Resignation approved successfully', data: resignation });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const rejectResignation = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { reason } = req.body;
+
+        const resignation = await Resignation.findById(id);
+        if (!resignation) {
+            return res.status(404).json({ success: false, message: 'Resignation request not found' });
+        }
+
+        if (resignation.status !== 'Pending') {
+            return res.status(400).json({ success: false, message: `Cannot reject request with status: ${resignation.status}` });
+        }
+
+        resignation.status = 'Rejected';
+        resignation.reason = reason ? `${resignation.reason}\nRejection Reason: ${reason}` : resignation.reason;
+
+        await resignation.save();
+
+        res.json({ success: true, message: 'Resignation rejected successfully', data: resignation });
     } catch (err) {
         next(err);
     }

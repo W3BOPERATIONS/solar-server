@@ -41,12 +41,12 @@ const hrmsSettingsSchema = new mongoose.Schema({
         leaves: { type: String, default: '' },
         performanceLoginTime: { type: String, default: '' },
         performanceWorkingHours: { type: Number, default: 8 },
-        yearlyFreeLeave: { type: String, default: '' }
+        yearlyFreeLeave: { type: String, default: '' },
+        hybridType: { type: String, default: '' }
     },
     recruitment: {
         probation: { type: String, default: '' },
-        training: { type: String, default: '' },
-        payrollType: { type: String, default: 'monthly' }
+        training: [{ type: String }]
     },
     performance: {
         efficiencyFormula: { type: String, default: '' },
@@ -56,7 +56,6 @@ const hrmsSettingsSchema = new mongoose.Schema({
         productivity: { type: String, default: '' },
         breakTime: { type: String, default: '' },
         idealTime: { type: String, default: '' },
-        payrollType: { type: String, default: 'monthly' },
         efficiencyDecreaseGrid: [{
             range: { type: String },
             decrease: { type: String }
