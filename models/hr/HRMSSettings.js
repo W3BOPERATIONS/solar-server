@@ -42,7 +42,12 @@ const hrmsSettingsSchema = new mongoose.Schema({
         performanceLoginTime: { type: String, default: '' },
         performanceWorkingHours: { type: Number, default: 8 },
         yearlyFreeLeave: { type: String, default: '' },
-        hybridType: { type: String, default: '' }
+        hybridType: { type: String, default: '' },
+        perKwCommission: { type: Number, default: 0 },
+        perCustomerFileCommission: { type: Number, default: 0 },
+        hybridBaseType: { type: String, enum: ['Monthly', 'Hourly'], default: 'Monthly' },
+        hybridSalary: { type: String, default: '' },
+        commissionTypeSelection: { type: String, enum: ['Per kW Commission', 'Per Customer File'], default: 'Per kW Commission' }
     },
     recruitment: {
         probation: { type: String, default: '' },

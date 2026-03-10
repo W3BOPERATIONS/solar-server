@@ -32,24 +32,41 @@ export const getHRMSSettings = async (req, res, next) => {
 
 export const createOrUpdateHRMSSettings = async (req, res, next) => {
     try {
-        const { department, position, payroll, recruitment, performance, vacancy, test } = req.body;
+        const { department, position, country, state, cluster, district } = req.body;
 
-        const updateData = {
+        // Check for duplicate
+        const existingSettings = await HRMSSettings.findOne({
             department,
             position,
-            updatedBy: req.user?.id
-        };
+            country,
+            state,
+            cluster,
+            district,
+            isActive: true
+        });
 
-        if (payroll) updateData.payroll = payroll;
-        if (recruitment) updateData.recruitment = recruitment;
-        if (performance) updateData.performance = performance;
-        if (vacancy) updateData.vacancy = vacancy;
-        if (test) updateData.test = test;
+        if (existingSettings) {
+            return res.status(400).json({
+                success: false,
+                message: 'Configuration already exists for this location. Duplicate configuration is not allowed.'
+            });
+        }
+
+        const { payroll, recruitment, performance, vacancy, test } = req.body;
 
         // Always create a new record instead of updating an existing one
         const settings = await HRMSSettings.create({
-            ...updateData,
-            ...req.body,
+            department,
+            position,
+            country,
+            state,
+            cluster,
+            district,
+            payroll,
+            recruitment,
+            performance,
+            vacancy,
+            test,
             createdBy: req.user?.id
         });
 
@@ -136,6 +153,25 @@ export const getCandidateTests = async (req, res, next) => {
 
 export const createCandidateTest = async (req, res, next) => {
     try {
+        const { department, country, state, cluster, district } = req.body;
+
+        // Check for duplicate
+        const existingTest = await CandidateTest.findOne({
+            department,
+            country,
+            state,
+            cluster,
+            district,
+            isActive: true
+        });
+
+        if (existingTest) {
+            return res.status(400).json({
+                success: false,
+                message: 'Configuration already exists for this location. Duplicate configuration is not allowed.'
+            });
+        }
+
         const test = await CandidateTest.create({
             ...req.body,
             createdBy: req.user?.id
@@ -205,6 +241,26 @@ export const getCandidateTrainings = async (req, res, next) => {
 
 export const createCandidateTraining = async (req, res, next) => {
     try {
+        const { department, position, country, state, cluster, district } = req.body;
+
+        // Check for duplicate
+        const existingTraining = await CandidateTraining.findOne({
+            department,
+            position,
+            country,
+            state,
+            cluster,
+            district,
+            isActive: true
+        });
+
+        if (existingTraining) {
+            return res.status(400).json({
+                success: false,
+                message: 'Configuration already exists for this location. Duplicate configuration is not allowed.'
+            });
+        }
+
         const training = await CandidateTraining.create({
             ...req.body,
             createdBy: req.user?.id
@@ -274,6 +330,26 @@ export const getVacancies = async (req, res, next) => {
 
 export const createVacancy = async (req, res, next) => {
     try {
+        const { department, position, country, state, cluster, district } = req.body;
+
+        // Check for duplicate
+        const existingVacancy = await Vacancy.findOne({
+            department,
+            position,
+            country,
+            state,
+            cluster,
+            district,
+            isActive: true
+        });
+
+        if (existingVacancy) {
+            return res.status(400).json({
+                success: false,
+                message: 'Configuration already exists for this location. Duplicate configuration is not allowed.'
+            });
+        }
+
         const vacancy = await Vacancy.create({
             ...req.body,
             createdBy: req.user?.id
