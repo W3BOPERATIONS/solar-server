@@ -41,6 +41,40 @@ const skuSchema = new mongoose.Schema(
             type: Boolean,
             default: true,
         },
+        parameters: [
+            {
+                title: String,
+                rows: [
+                    {
+                        name: String,
+                        value: String,
+                        unit: String
+                    }
+                ]
+            }
+        ],
+        image: {
+            type: String, // Store base64 or URL
+            default: null,
+        },
+        product: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Product',
+        },
+        capacity: {
+            type: String,
+        },
+        phase: {
+            type: String,
+        },
+        state: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'State',
+        },
+        cluster: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Cluster',
+        },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',

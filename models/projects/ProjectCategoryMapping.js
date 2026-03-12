@@ -57,6 +57,6 @@ const projectCategoryMappingSchema = new mongoose.Schema(
 
 // We might want a unique compound index to prevent duplicate ranges for the same category in the same cluster.
 // For now, let's keep it simple or allow overlap, but generally you wouldn't want the exact same mapping twice.
-projectCategoryMappingSchema.index({ stateId: 1, clusterId: 1, categoryId: 1, subCategoryId: 1, projectTypeFrom: 1, projectTypeTo: 1 }, { unique: true });
+projectCategoryMappingSchema.index({ stateId: 1, clusterId: 1, categoryId: 1, subCategoryId: 1, projectTypeFrom: 1, projectTypeTo: 1, subProjectTypeId: 1 }, { unique: true });
 
 export default mongoose.model('ProjectCategoryMapping', projectCategoryMappingSchema);

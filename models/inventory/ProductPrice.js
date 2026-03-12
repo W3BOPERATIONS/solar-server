@@ -7,6 +7,11 @@ const productPriceSchema = new mongoose.Schema(
             ref: 'Product',
             required: true,
         },
+        sku: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'SKU',
+            required: true,
+        },
         state: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'State',
@@ -46,7 +51,7 @@ const productPriceSchema = new mongoose.Schema(
     {
         timestamps: true,
         indexes: [
-            { product: 1, cluster: 1, unique: true } // One price per product per cluster
+            { sku: 1, cluster: 1, unique: true } // One price per SKU per cluster
         ]
     }
 );

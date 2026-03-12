@@ -19,6 +19,7 @@ export const getAllProducts = async (req, res, next) => {
       .populate('subCategoryId')
       .populate('projectTypeId')
       .populate('subProjectTypeId')
+      .populate('subProjectTypeIds')
       .populate('brandId')
       .populate('unitId')
       .populate('skuId')
@@ -41,6 +42,7 @@ export const getProductById = async (req, res, next) => {
       .populate('subCategoryId')
       .populate('projectTypeId')
       .populate('subProjectTypeId')
+      .populate('subProjectTypeIds')
       .populate('brandId')
       .populate('unitId')
       .populate('skuId')
@@ -60,9 +62,9 @@ export const getProductById = async (req, res, next) => {
 export const createProduct = async (req, res, next) => {
   try {
     const { 
-      name, categoryId, subCategoryId, projectTypeId, subProjectTypeId, brandId, unitId, skuId, stateId, cityId, districtId, clusterId, description,
+      name, categoryId, subCategoryId, projectTypeId, projectTypeFrom, projectTypeTo, projectTypes, subProjectTypeId, subProjectTypeIds, brandId, unitId, skuId, stateId, cityId, districtId, clusterId, description,
       serialNo, subtype, technology, tolerance, dcr, datasheet,
-      mechanicalParameters, electricalParameters, skuParameters
+      mechanicalParameters, electricalParameters, skuParameters, additionalSkus
     } = req.body;
     
     // Helper to handle empty strings for ObjectIds
@@ -78,7 +80,11 @@ export const createProduct = async (req, res, next) => {
       categoryId: toId(categoryId),
       subCategoryId: toId(subCategoryId),
       projectTypeId: toId(projectTypeId),
+      projectTypeFrom,
+      projectTypeTo,
+      projectTypes,
       subProjectTypeId: toId(subProjectTypeId),
+      subProjectTypeIds: Array.isArray(subProjectTypeIds) ? subProjectTypeIds.map(toId).filter(Boolean) : [],
       brandId: toId(brandId),
       unitId: toId(unitId),
       skuId: toId(skuId),
@@ -95,11 +101,12 @@ export const createProduct = async (req, res, next) => {
       mechanicalParameters,
       electricalParameters,
       skuParameters,
+      additionalSkus,
       description,
       createdBy: req.user?.id
     });
 
-    await product.populate('categoryId subCategoryId projectTypeId subProjectTypeId brandId unitId skuId stateId cityId districtId clusterId');
+    await product.populate('categoryId subCategoryId projectTypeId subProjectTypeId subProjectTypeIds brandId unitId skuId stateId cityId districtId clusterId');
 
     res.status(201).json({ success: true, message: 'Product created successfully', data: product });
   } catch (err) {
@@ -109,47 +116,42 @@ export const createProduct = async (req, res, next) => {
 
 export const updateProduct = async (req, res, next) => {
   try {
-    const { 
-      name, categoryId, subCategoryId, projectTypeId, subProjectTypeId, brandId, unitId, skuId, stateId, cityId, districtId, clusterId, description, status,
-      serialNo, subtype, technology, tolerance, dcr, datasheet,
-      mechanicalParameters, electricalParameters, skuParameters 
-    } = req.body;
-
+    const updateData = {};
     const toId = (val) => (val === "" || val === null) ? undefined : val;
+
+    // Define all possible fields
+    const fields = [
+      'name', 'categoryId', 'subCategoryId', 'projectTypeId', 'projectTypeFrom', 'projectTypeTo', 
+      'projectTypes', 'subProjectTypeId', 'subProjectTypeIds', 'brandId', 'unitId', 'skuId', 
+      'stateId', 'cityId', 'districtId', 'clusterId', 'description', 'status',
+      'serialNo', 'subtype', 'technology', 'tolerance', 'dcr', 'datasheet',
+      'mechanicalParameters', 'electricalParameters', 'skuParameters', 'additionalSkus'
+    ];
+
+    fields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        if (['categoryId', 'subCategoryId', 'projectTypeId', 'brandId', 'unitId', 'skuId', 'stateId', 'cityId', 'districtId', 'clusterId', 'subProjectTypeId'].includes(field)) {
+          updateData[field] = toId(req.body[field]);
+        } else if (field === 'subProjectTypeIds' && Array.isArray(req.body[field])) {
+           updateData[field] = req.body[field].map(toId).filter(Boolean);
+        } else if (field === 'technology' && Array.isArray(req.body[field])) {
+           updateData[field] = req.body[field].join(', ');
+        } else {
+          updateData[field] = req.body[field];
+        }
+      }
+    });
+
+    updateData.updatedBy = req.user?.id;
 
     const product = await Product.findByIdAndUpdate(
       req.params.id,
-      {
-        name,
-        categoryId: toId(categoryId),
-        subCategoryId: toId(subCategoryId),
-        projectTypeId: toId(projectTypeId),
-        subProjectTypeId: toId(subProjectTypeId),
-        brandId: toId(brandId),
-        unitId: toId(unitId),
-        skuId: toId(skuId),
-        stateId: toId(stateId),
-        cityId: toId(cityId),
-        districtId: toId(districtId),
-        clusterId: toId(clusterId),
-        serialNo,
-        subtype,
-        technology,
-        tolerance,
-        dcr,
-        datasheet,
-        description,
-        status,
-        mechanicalParameters,
-        electricalParameters,
-        skuParameters,
-        updatedBy: req.user?.id
-      },
+      { $set: updateData },
       { new: true, runValidators: true }
     );
 
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
-    await product.populate('categoryId subCategoryId projectTypeId subProjectTypeId brandId unitId skuId stateId cityId districtId clusterId');
+    await product.populate('categoryId subCategoryId projectTypeId subProjectTypeId subProjectTypeIds brandId unitId skuId stateId cityId districtId clusterId');
 
     res.json({ success: true, message: 'Product updated successfully', data: product });
   } catch (err) {

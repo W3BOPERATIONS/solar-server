@@ -4,7 +4,7 @@ export const getAllMappings = async (req, res, next) => {
     try {
         const { stateId, clusterId, categoryId, status } = req.query;
         const query = {};
-        
+
         if (status !== undefined) query.status = status === 'true';
         if (stateId) query.stateId = stateId;
         if (clusterId) query.clusterId = clusterId;
@@ -26,13 +26,13 @@ export const getAllMappings = async (req, res, next) => {
 
 export const createMapping = async (req, res, next) => {
     try {
-        const { stateId, clusterId, categoryId, subCategoryId, projectTypeFrom, projectTypeTo, subProjectTypeId } = req.body;
+        const { stateId, clusterIds, categoryId, subCategoryId, projectTypeFrom, projectTypeTo, subProjectTypeId } = req.body;
 
-        if (!stateId || !clusterId || !categoryId || !subCategoryId || projectTypeFrom === undefined || projectTypeTo === undefined) {
-            return res.status(400).json({ success: false, message: 'All required mapping fields must be provided.' });
+        if (!stateId || !clusterIds || !Array.isArray(clusterIds) || clusterIds.length === 0 || !categoryId || !subCategoryId || projectTypeFrom === undefined || projectTypeTo === undefined) {
+            return res.status(400).json({ success: false, message: 'All required mapping fields must be provided, and clusters must be an array.' });
         }
 
-        const mapping = await ProjectCategoryMapping.create({
+        const mappingsToCreate = clusterIds.map(clusterId => ({
             stateId,
             clusterId,
             categoryId,
@@ -41,14 +41,23 @@ export const createMapping = async (req, res, next) => {
             projectTypeTo,
             subProjectTypeId,
             createdBy: req.user?.id
+        }));
+
+        const result = await ProjectCategoryMapping.insertMany(mappingsToCreate, { ordered: false });
+
+        res.status(201).json({
+            success: true,
+            message: `${result.length} Project Category Mappings created successfully`,
+            data: result
         });
-
-        await mapping.populate('stateId clusterId categoryId subCategoryId subProjectTypeId');
-
-        res.status(201).json({ success: true, message: 'Project Category Mapping created successfully', data: mapping });
     } catch (err) {
         if (err.code === 11000) {
-             return res.status(400).json({ success: false, message: 'A mapping with these exact parameters already exists in this cluster.' });
+            const createdCount = err.insertedDocs ? err.insertedDocs.length : 0;
+            return res.status(200).json({
+                success: true,
+                message: createdCount > 0 ? `${createdCount} mappings created successfully. Some duplicates were skipped.` : 'A mapping with these exact parameters already exists in the selected clusters.',
+                data: err.insertedDocs || []
+            });
         }
         next(err);
     }
@@ -79,7 +88,7 @@ export const updateMapping = async (req, res, next) => {
         res.json({ success: true, message: 'Mapping updated successfully', data: mapping });
     } catch (err) {
         if (err.code === 11000) {
-             return res.status(400).json({ success: false, message: 'A mapping with these exact parameters already exists in this cluster.' });
+            return res.status(400).json({ success: false, message: 'A mapping with these exact parameters already exists in this cluster.' });
         }
         next(err);
     }

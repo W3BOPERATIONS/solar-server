@@ -22,11 +22,27 @@ const productSchema = new mongoose.Schema(
       ref: 'SubProjectType',
       required: false,
     },
+    subProjectTypeIds: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'SubProjectType',
+    }],
     projectTypeId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'ProjectType',
       required: false,
     },
+    projectTypeFrom: {
+      type: Number,
+      required: false,
+    },
+    projectTypeTo: {
+      type: Number,
+      required: false,
+    },
+    projectTypes: [{
+        from: { type: Number },
+        to: { type: Number }
+    }],
     brandId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'BrandManufacturer',
@@ -41,6 +57,8 @@ const productSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'SKU',
       required: false,
+      unique: true,
+      sparse: true
     },
     // Location Hierarchy
     stateId: {
@@ -96,6 +114,10 @@ const productSchema = new mongoose.Schema(
       default: []
     },
     skuParameters: {
+      type: [String],
+      default: []
+    },
+    additionalSkus: {
       type: [String],
       default: []
     },

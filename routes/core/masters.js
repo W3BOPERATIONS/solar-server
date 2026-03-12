@@ -7,6 +7,7 @@ import * as categoryController from '../../controllers/inventory/categoryControl
 import * as unitController from '../../controllers/inventory/unitController.js';
 import * as skuController from '../../controllers/inventory/skuController.js';
 import * as priceMasterController from '../../controllers/inventory/priceMasterController.js';
+import { createProductPriceHandler } from '../../controllers/inventory/productPriceController.js';
 import * as subCategoryController from '../../controllers/inventory/subCategoryController.js';
 import * as subProjectTypeController from '../../controllers/projects/subProjectTypeController.js';
 import * as projectCategoryMappingController from '../../controllers/projects/projectCategoryMappingController.js';
@@ -57,12 +58,22 @@ router.get('/skus', skuController.getAllSKUs);
 router.post('/skus', protect, skuController.createSKU);
 router.put('/skus/:id', protect, skuController.updateSKU);
 router.delete('/skus/:id', protect, skuController.deleteSKU);
+router.post('/skus/parameters', protect, skuController.saveSKUParameters);
+router.get('/skus/:skuCode/parameters', skuController.getSKUParameters);
+router.post('/skus/image', protect, skuController.saveSKUImage);
+router.get('/skus/:skuCode/image', skuController.getSKUImage);
+router.post('/skus/bulk', protect, skuController.bulkCreateSKUs);
+router.get('/skus/product/:productId', skuController.getSKUsByProduct);
 
 // --- Price Master ---
 router.get('/price-master', priceMasterController.getAllPriceMasters);
 router.post('/price-master', protect, priceMasterController.createPriceMaster);
 router.put('/price-master/:id', protect, priceMasterController.updatePriceMaster);
 router.delete('/price-master/:id', protect, priceMasterController.deletePriceMaster);
+router.get('/product-prices', createProductPriceHandler.getAll);
+router.post('/product-prices', protect, createProductPriceHandler.upsert);
+router.post('/product-prices/bulk', protect, createProductPriceHandler.bulkUpsert);
+router.delete('/product-prices/:id', protect, createProductPriceHandler.delete);
 
 // --- Project Category Mappings ---
 router.get('/project-category-mappings', projectCategoryMappingController.getAllMappings);
