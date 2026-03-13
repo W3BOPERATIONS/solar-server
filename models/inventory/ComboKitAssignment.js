@@ -28,7 +28,8 @@ const comboKitAssignmentSchema = new mongoose.Schema({
         image: String,
         panelBrand: String,
         panelSkus: [String],
-        inverterBrand: String
+        inverterBrand: String,
+        inverterSkus: [String]
     }],
     // New fields for customization
     solarkitName: {

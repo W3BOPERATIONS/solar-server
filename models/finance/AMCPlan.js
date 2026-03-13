@@ -52,10 +52,10 @@ const amcPlanSchema = new mongoose.Schema({
         enum: ['Monthly', 'Annually', 'Both'],
         default: 'Monthly'
     },
-    amcDuration: [{
-        type: String,
-        enum: ['1 Month', '3 Months', '6 Months', '12 Months']
-    }],
+    amcDuration: {
+        type: Number,
+        default: 12
+    },
     monthlyVisits: {
         type: Number,
         default: 1,

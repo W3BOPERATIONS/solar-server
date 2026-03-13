@@ -65,7 +65,7 @@ export const getAllManufacturers = async (req, res) => {
         const manufacturers = await BrandManufacturer.find(filter)
             .populate('state', 'name')
             .populate('district', 'name')
-            .populate({ path: 'city', populate: { path: 'zones', select: 'name' } })
+            .populate('city', 'name')
             .sort({ createdAt: -1 });
 
         res.status(200).json(manufacturers);

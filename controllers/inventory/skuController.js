@@ -3,9 +3,15 @@ import Product from '../../models/inventory/Product.js';
 
 export const getAllSKUs = async (req, res, next) => {
     try {
-        const { status } = req.query;
+        const { status, brand, category, projectType, productType, technology, wattage } = req.query;
         const query = {};
         if (status !== undefined) query.status = status === 'true';
+        if (brand) query.brand = brand;
+        if (category) query.category = category;
+        if (projectType) query.projectType = projectType;
+        if (productType) query.productType = productType;
+        if (technology) query.technology = technology;
+        if (wattage) query.wattage = wattage;
 
         const skus = await SKU.find(query).sort({ createdAt: -1 });
         res.json({ success: true, count: skus.length, data: skus });
