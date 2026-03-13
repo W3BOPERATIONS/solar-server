@@ -6,6 +6,14 @@ const amcPlanSchema = new mongoose.Schema({
         ref: 'State',
         required: true
     },
+    cluster: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Cluster'
+    },
+    district: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'District'
+    },
     services: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'AMCService'

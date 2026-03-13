@@ -166,9 +166,11 @@ export const saveSolarKitBOM = async (req, res) => {
 
 export const createAMCPlan = async (req, res) => {
     try {
-        const { stateId, serviceIds } = req.body;
+        const { stateId, clusterId, districtId, serviceIds } = req.body;
         const newPlan = new AMCPlan({
             state: stateId,
+            cluster: clusterId,
+            district: districtId,
             services: serviceIds,
             planName: req.body.planName,
             category: req.body.category,
@@ -191,6 +193,8 @@ export const getAMCPlans = async (req, res) => {
     try {
         const plans = await AMCPlan.find()
             .populate('state', 'name')
+            .populate('cluster', 'name')
+            .populate('district', 'name')
             .populate('services');
         res.status(200).json(plans);
     } catch (error) {
@@ -200,9 +204,11 @@ export const getAMCPlans = async (req, res) => {
 
 export const updateAMCPlan = async (req, res) => {
     try {
-        const { stateId, serviceIds } = req.body;
+        const { stateId, clusterId, districtId, serviceIds } = req.body;
         const updateData = {
             state: stateId,
+            cluster: clusterId,
+            district: districtId,
             services: serviceIds,
             planName: req.body.planName,
             category: req.body.category,
@@ -220,6 +226,8 @@ export const updateAMCPlan = async (req, res) => {
 
         const updatedPlan = await AMCPlan.findByIdAndUpdate(req.params.id, updateData, { new: true })
             .populate('state', 'name')
+            .populate('cluster', 'name')
+            .populate('district', 'name')
             .populate('services');
         res.status(200).json(updatedPlan);
     } catch (error) {
