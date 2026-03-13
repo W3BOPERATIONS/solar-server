@@ -179,7 +179,12 @@ export const createAMCPlan = async (req, res) => {
             subProjectType: req.body.subProjectType,
             monthlyCharge: req.body.monthlyCharge,
             yearlyCharge: req.body.yearlyCharge,
+            paymentType: req.body.paymentType,
+            amcDuration: req.body.amcDuration,
+            monthlyVisits: req.body.monthlyVisits,
             annualVisits: req.body.annualVisits,
+            basicPricePerKw: req.body.basicPricePerKw,
+            amcServiceCharges: req.body.amcServiceCharges,
             status: req.body.status || 'Active'
         });
         const savedPlan = await newPlan.save();
@@ -217,7 +222,12 @@ export const updateAMCPlan = async (req, res) => {
             subProjectType: req.body.subProjectType,
             monthlyCharge: req.body.monthlyCharge,
             yearlyCharge: req.body.yearlyCharge,
+            paymentType: req.body.paymentType,
+            amcDuration: req.body.amcDuration,
+            monthlyVisits: req.body.monthlyVisits,
             annualVisits: req.body.annualVisits,
+            basicPricePerKw: req.body.basicPricePerKw,
+            amcServiceCharges: req.body.amcServiceCharges,
             status: req.body.status
         };
 

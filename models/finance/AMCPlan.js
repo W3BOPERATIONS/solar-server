@@ -47,6 +47,21 @@ const amcPlanSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    paymentType: {
+        type: String,
+        enum: ['Monthly', 'Annually', 'Both'],
+        default: 'Monthly'
+    },
+    amcDuration: [{
+        type: String,
+        enum: ['1 Month', '3 Months', '6 Months', '12 Months']
+    }],
+    monthlyVisits: {
+        type: Number,
+        default: 1,
+        min: 1,
+        max: 30
+    },
     annualVisits: {
         type: Number,
         default: 4
@@ -57,6 +72,16 @@ const amcPlanSchema = new mongoose.Schema({
         default: 'Active'
     },
     description: String,
+    basicPricePerKw: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    amcServiceCharges: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
