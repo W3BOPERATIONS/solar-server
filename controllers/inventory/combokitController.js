@@ -374,7 +374,7 @@ export const getAssignments = async (req, res) => {
 
         const assignments = await ComboKitAssignment.find(filter)
             .populate('state', 'name')
-            .populate('cluster', 'name')
+            .populate('clusters', 'name')
             .populate('districts', 'name');
         res.status(200).json(assignments);
     } catch (error) {

@@ -82,6 +82,10 @@ const amcPlanSchema = new mongoose.Schema({
         default: 0,
         min: 0
     },
+    guaranteePerUnitPrice: {
+        type: Number,
+        default: 0
+    },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'

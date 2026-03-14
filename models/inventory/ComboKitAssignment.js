@@ -6,11 +6,10 @@ const comboKitAssignmentSchema = new mongoose.Schema({
         ref: 'State',
         required: true
     },
-    cluster: {
+    clusters: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Cluster',
-        required: true
-    },
+        ref: 'Cluster'
+    }],
     // The frontend sends an array of district IDs.
     // The user might be assigning this project to multiple districts.
     districts: [{
@@ -20,9 +19,9 @@ const comboKitAssignmentSchema = new mongoose.Schema({
     cpTypes: [{
         type: String
     }],
-    role: {
+    roles: [{
         type: String
-    },
+    }],
     comboKits: [{
         name: String,
         image: String,
