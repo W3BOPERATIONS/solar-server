@@ -7,6 +7,11 @@ const supplierVendorPlanSchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
+        countryId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Country',
+            default: null
+        },
         stateId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'State',

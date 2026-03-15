@@ -3,7 +3,7 @@ import SupplierVendorPlan from '../../models/vendors/SupplierVendorPlan.js';
 // Get plans based on location hierarchy
 export const getSupplierVendorPlans = async (req, res, next) => {
     try {
-        const { stateId, clusterId, districtId, fetchAllNames } = req.query;
+        const { countryId, stateId, clusterId, districtId, fetchAllNames } = req.query;
 
         // If requested, just return all distinct global plan names
         if (fetchAllNames === 'true') {
@@ -14,9 +14,10 @@ export const getSupplierVendorPlans = async (req, res, next) => {
         let queries = [];
 
         // Always include completely global plans (fallback)
-        queries.push({ stateId: null, clusterId: null, districtId: null });
+        queries.push({ countryId: null, stateId: null, clusterId: null, districtId: null });
 
         // Add varying levels of specificity
+        if (countryId) queries.push({ countryId: countryId, stateId: null, clusterId: null, districtId: null });
         if (stateId) queries.push({ stateId: stateId, clusterId: null, districtId: null });
         if (clusterId) queries.push({ clusterId: clusterId, districtId: null });
         if (districtId) queries.push({ districtId: districtId });
@@ -25,6 +26,7 @@ export const getSupplierVendorPlans = async (req, res, next) => {
 
         // Fetch all matching plans
         const plans = await SupplierVendorPlan.find(query)
+            .populate('countryId', 'name')
             .populate('stateId', 'name')
             .populate('clusterId', 'name')
             .populate('districtId', 'name')
@@ -34,9 +36,10 @@ export const getSupplierVendorPlans = async (req, res, next) => {
         const planMap = new Map();
         for (const p of plans) {
             let score = 0;
-            if (p.districtId) score = 3;
-            else if (p.clusterId) score = 2;
-            else if (p.stateId) score = 1;
+            if (p.districtId) score = 4;
+            else if (p.clusterId) score = 3;
+            else if (p.stateId) score = 2;
+            else if (p.countryId) score = 1;
 
             if (!planMap.has(p.name) || planMap.get(p.name).score < score) {
                 p.score = score;
@@ -70,12 +73,13 @@ export const saveSupplierVendorPlan = async (req, res, next) => {
         } 
         // 2. Otherwise save explicitly (using nulls if global was passed from UI)
         else {
+            const finalCountryId = planData.countryId || null;
             const finalStateId = planData.stateId || null;
             const finalClusterId = planData.clusterId || null;
             const finalDistrictId = planData.districtId || null;
 
-            const filter = { name, stateId: finalStateId, clusterId: finalClusterId, districtId: finalDistrictId };
-            const payload = { ...planData, name, stateId: finalStateId, clusterId: finalClusterId, districtId: finalDistrictId };
+            const filter = { name, countryId: finalCountryId, stateId: finalStateId, clusterId: finalClusterId, districtId: finalDistrictId };
+            const payload = { ...planData, name, countryId: finalCountryId, stateId: finalStateId, clusterId: finalClusterId, districtId: finalDistrictId };
 
             const plan = await SupplierVendorPlan.findOneAndUpdate(filter, payload, { new: true, upsert: true, runValidators: true });
             return res.status(200).json({ success: true, data: plan, message: 'Plan saved successfully' });

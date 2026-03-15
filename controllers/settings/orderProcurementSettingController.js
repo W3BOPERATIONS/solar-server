@@ -6,14 +6,9 @@ import OrderProcurementSetting from '../../models/orders/OrderProcurementSetting
 export const getAllSettings = async (req, res, next) => {
     try {
         const settings = await OrderProcurementSetting.find()
-            .populate('category', 'name')
-            .populate('subCategory', 'name')
-            .populate('projectType', 'name')
-            .populate('subProjectType', 'name')
             .populate('product', 'name')
             .populate('brand', 'name')
             .populate('skuItems.comboKit', 'comboKits')
-            .populate('skuItems.supplierType', 'name')
             .sort({ createdAt: -1 });
 
         res.json({
@@ -31,14 +26,9 @@ export const getAllSettings = async (req, res, next) => {
 export const getSettingById = async (req, res, next) => {
     try {
         const setting = await OrderProcurementSetting.findById(req.params.id)
-            .populate('category', 'name')
-            .populate('subCategory', 'name')
-            .populate('projectType', 'name')
-            .populate('subProjectType', 'name')
             .populate('product', 'name')
             .populate('brand', 'name')
-            .populate('skuItems.comboKit', 'comboKits')
-            .populate('skuItems.supplierType', 'name');
+            .populate('skuItems.comboKit', 'comboKits');
 
         if (!setting) {
             return res.status(404).json({
@@ -66,10 +56,6 @@ export const createSetting = async (req, res, next) => {
         const setting = await OrderProcurementSetting.create(req.body);
 
         await setting.populate([
-            { path: 'category', select: 'name' },
-            { path: 'subCategory', select: 'name' },
-            { path: 'projectType', select: 'name' },
-            { path: 'subProjectType', select: 'name' },
             { path: 'product', select: 'name' },
             { path: 'brand', select: 'name' }
         ]);
@@ -105,10 +91,6 @@ export const updateSetting = async (req, res, next) => {
             req.body,
             { new: true, runValidators: true }
         ).populate([
-            { path: 'category', select: 'name' },
-            { path: 'subCategory', select: 'name' },
-            { path: 'projectType', select: 'name' },
-            { path: 'subProjectType', select: 'name' },
             { path: 'product', select: 'name' },
             { path: 'brand', select: 'name' }
         ]);

@@ -69,12 +69,13 @@ export const deleteInstallerVendor = async (req, res, next) => {
 
 export const getSupplierTypes = async (req, res, next) => {
     try {
-        const { stateId, clusterId, districtId } = req.query;
+        const { countryId, stateId, clusterId, districtId } = req.query;
         let queries = [];
         
         // Always include completely global plans
-        queries.push({ stateId: null, clusterId: null, districtId: null });
+        queries.push({ countryId: null, stateId: null, clusterId: null, districtId: null });
 
+        if (countryId) queries.push({ countryId: countryId, stateId: null, clusterId: null, districtId: null });
         if (stateId) queries.push({ stateId: stateId, clusterId: null, districtId: null });
         if (clusterId) queries.push({ clusterId: clusterId, districtId: null });
         if (districtId) queries.push({ districtId: districtId });
@@ -82,6 +83,7 @@ export const getSupplierTypes = async (req, res, next) => {
         const query = queries.length > 0 ? { $or: queries } : {};
 
         const types = await SupplierType.find(query)
+            .populate('countryId', 'name')
             .populate('stateId', 'name')
             .populate('clusterId', 'name')
             .populate('districtId', 'name')
@@ -91,9 +93,10 @@ export const getSupplierTypes = async (req, res, next) => {
         const typeMap = new Map();
         for (const t of types) {
             let score = 0;
-            if (t.districtId) score = 3;
-            else if (t.clusterId) score = 2;
-            else if (t.stateId) score = 1;
+            if (t.districtId) score = 4;
+            else if (t.clusterId) score = 3;
+            else if (t.stateId) score = 2;
+            else if (t.countryId) score = 1;
 
             if (!typeMap.has(t.loginTypeName) || typeMap.get(t.loginTypeName).score < score) {
                 t.score = score;
@@ -111,14 +114,15 @@ export const getSupplierTypes = async (req, res, next) => {
 
 export const createSupplierType = async (req, res, next) => {
     try {
-        const { loginTypeName, stateId, clusterId, districtId } = req.body;
+        const { loginTypeName, countryId, stateId, clusterId, districtId } = req.body;
 
+        const finalCountryId = countryId || null;
         const finalStateId = stateId || null;
         const finalClusterId = clusterId || null;
         const finalDistrictId = districtId || null;
 
-        const payload = { ...req.body, stateId: finalStateId, clusterId: finalClusterId, districtId: finalDistrictId };
-        const filter = { loginTypeName, stateId: finalStateId, clusterId: finalClusterId, districtId: finalDistrictId };
+        const payload = { ...req.body, countryId: finalCountryId, stateId: finalStateId, clusterId: finalClusterId, districtId: finalDistrictId };
+        const filter = { loginTypeName, countryId: finalCountryId, stateId: finalStateId, clusterId: finalClusterId, districtId: finalDistrictId };
 
         const type = await SupplierType.findOneAndUpdate(
             filter,

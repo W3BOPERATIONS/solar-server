@@ -16,8 +16,7 @@ const skuItemSchema = new mongoose.Schema({
         ref: 'ComboKitAssignment'
     },
     supplierType: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'SupplierType',
+        type: String,
         required: true
     }
 });
@@ -25,23 +24,19 @@ const skuItemSchema = new mongoose.Schema({
 const orderProcurementSettingSchema = new mongoose.Schema(
     {
         category: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Category',
+            type: String,
             required: true
         },
         subCategory: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'SubCategory',
+            type: String,
             required: true
         },
         projectType: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'ProjectType',
+            type: String,
             required: true
         },
         subProjectType: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'SubProjectType',
+            type: String,
             required: true
         },
         product: {

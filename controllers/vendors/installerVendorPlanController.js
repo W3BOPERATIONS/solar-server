@@ -3,7 +3,7 @@ import InstallerVendorPlan from '../../models/vendors/InstallerVendorPlan.js';
 // Get plans based on location hierarchy
 export const getInstallerVendorPlans = async (req, res, next) => {
     try {
-        const { stateId, clusterId, districtId, fetchAllNames } = req.query;
+        const { countryId, stateId, clusterId, districtId, fetchAllNames } = req.query;
         
         if (fetchAllNames === 'true') {
             const names = await InstallerVendorPlan.distinct('name');
@@ -13,8 +13,9 @@ export const getInstallerVendorPlans = async (req, res, next) => {
         let queries = [];
         
         // Always include completely global plans
-        queries.push({ stateId: null, clusterId: null, districtId: null });
+        queries.push({ countryId: null, stateId: null, clusterId: null, districtId: null });
 
+        if (countryId) queries.push({ countryId: countryId, stateId: null, clusterId: null, districtId: null });
         if (stateId) queries.push({ stateId: stateId, clusterId: null, districtId: null });
         if (clusterId) queries.push({ clusterId: clusterId, districtId: null });
         if (districtId) queries.push({ districtId: districtId });
@@ -22,6 +23,7 @@ export const getInstallerVendorPlans = async (req, res, next) => {
         const query = queries.length > 0 ? { $or: queries } : {};
 
         const plans = await InstallerVendorPlan.find(query)
+            .populate('countryId', 'name')
             .populate('stateId', 'name')
             .populate('clusterId', 'name')
             .populate('districtId', 'name')
@@ -31,9 +33,10 @@ export const getInstallerVendorPlans = async (req, res, next) => {
         const planMap = new Map();
         for (const p of plans) {
             let score = 0;
-            if (p.districtId) score = 3;
-            else if (p.clusterId) score = 2;
-            else if (p.stateId) score = 1;
+            if (p.districtId) score = 4;
+            else if (p.clusterId) score = 3;
+            else if (p.stateId) score = 2;
+            else if (p.countryId) score = 1;
 
             if (!planMap.has(p.name) || planMap.get(p.name).score < score) {
                 p.score = score;
@@ -52,17 +55,18 @@ export const getInstallerVendorPlans = async (req, res, next) => {
 // Create or Update a plan (supports bulk districts)
 export const saveInstallerVendorPlan = async (req, res, next) => {
     try {
-        const { name, stateId, clusterId, districtId } = req.body;
+        const { name, countryId, stateId, clusterId, districtId } = req.body;
 
         // Ensure these are explicitly null if omitted or "all"
+        const finalCountryId = countryId || null;
         const finalStateId = stateId || null;
         const finalClusterId = clusterId || null;
         const finalDistrictId = districtId || null;
 
-        const payload = { ...req.body, stateId: finalStateId, clusterId: finalClusterId, districtId: finalDistrictId };
+        const payload = { ...req.body, countryId: finalCountryId, stateId: finalStateId, clusterId: finalClusterId, districtId: finalDistrictId };
 
         // Unique identifier for a plan is its name + its exact location scope
-        const filter = { name, stateId: finalStateId, clusterId: finalClusterId, districtId: finalDistrictId };
+        const filter = { name, countryId: finalCountryId, stateId: finalStateId, clusterId: finalClusterId, districtId: finalDistrictId };
 
         const plan = await InstallerVendorPlan.findOneAndUpdate(
             filter,
