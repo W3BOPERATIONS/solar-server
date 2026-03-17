@@ -123,8 +123,9 @@ export const createSupplier = async (req, res) => {
             type,
             name,
             state,
-            cluster, // mapped to city
+            cluster,
             district,
+            city,
             manufacturer,
             product,
             category,
@@ -138,8 +139,9 @@ export const createSupplier = async (req, res) => {
             type,
             name,
             state,
-            cluster, // This is City ID
+            cluster,
             district,
+            city,
             manufacturer,
             product,
             category,
@@ -173,8 +175,9 @@ export const getAllSuppliers = async (req, res) => {
 
         const suppliers = await BrandSupplier.find(filter)
             .populate('state', 'name')
-            .populate('cluster', 'name') // city
+            .populate('cluster', 'name')
             .populate('district', 'name')
+            .populate('city', 'name')
             .populate('manufacturer', 'companyName brand')
             .sort({ createdAt: -1 });
 

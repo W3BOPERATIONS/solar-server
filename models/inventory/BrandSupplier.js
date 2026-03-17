@@ -18,18 +18,19 @@ const brandSupplierSchema = new mongoose.Schema(
             ref: 'State',
             required: true,
         },
-        cluster: { // Frontend calls it Cluster, Backend usually maps this to City or a specific Cluster model if exists.
-            // User instruction: "State -> City -> District".
-            // I will map "Cluster" from frontend to "City" in backend as per previous patterns or keep it string if it's a loose concept,
-            // BUT user explicitly said "Use Setup Locations... State -> City -> District".
-            // So I will use City reference.
+        cluster: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'City',
+            ref: 'Cluster',
             required: true,
         },
         district: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'District',
+            required: true,
+        },
+        city: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'City',
             required: true,
         },
 
@@ -78,7 +79,7 @@ const brandSupplierSchema = new mongoose.Schema(
 );
 
 // Indexes for faster filtering
-brandSupplierSchema.index({ state: 1, cluster: 1, district: 1 });
+brandSupplierSchema.index({ state: 1, cluster: 1, district: 1, city: 1 });
 brandSupplierSchema.index({ type: 1 });
 brandSupplierSchema.index({ manufacturer: 1 });
 

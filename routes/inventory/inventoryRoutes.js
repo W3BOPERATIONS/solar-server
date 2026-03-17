@@ -16,7 +16,8 @@ import {
     updateWarehouse,
     deleteWarehouse,
     getSettings,
-    updateSettings
+    updateSettings,
+    getProjectedInventory
 } from '../../controllers/inventory/inventoryController.js';
 import { protect } from '../../middleware/auth.js';
 
@@ -32,6 +33,9 @@ router.delete('/items/:id', deleteInventoryItem);
 
 // Summary
 router.get('/summary', getInventorySummary);
+
+// Projection
+router.get('/projection', getProjectedInventory);
 
 // Brands
 router.post('/brands', createBrand);

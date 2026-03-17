@@ -8,8 +8,6 @@ import mongoose from 'mongoose';
 // Create Inventory Item
 export const createInventoryItem = async (req, res) => {
     try {
-        console.log('Creating Inventory Item:', req.body);
-        console.log('User:', req.user);
         const { itemName, brand, category, subCategory, projectType, subProjectType, kitType, sku, quantity, price, minLevel, maxLevel, state, cluster, city, district, status, productType, technology, wattage } = req.body;
 
         // Check if item exists at this location (State + Cluster + District + SKU)
@@ -21,7 +19,6 @@ export const createInventoryItem = async (req, res) => {
         });
 
         if (existingItem) {
-            console.log(`Item exists at this location. Updating quantity from ${existingItem.quantity} to ${existingItem.quantity + Number(quantity)}`);
             existingItem.quantity += Number(quantity);
             // Optionally update other fields if provided?
             // prioritizing keeping original meta-data but updating stock.
@@ -59,9 +56,6 @@ export const createInventoryItem = async (req, res) => {
             createdBy: req.user ? req.user.id : null // Handle potential missing user
         });
 
-        if (!req.user) {
-            console.warn('Warning: No user found in request, createdBy set to null');
-        }
 
         await newItem.save();
         res.status(201).json(newItem);
@@ -130,7 +124,7 @@ export const getInventoryItems = async (req, res) => {
         }
 
         const items = await InventoryItem.find(query)
-            .populate('brand', 'brandName')
+            .populate('brand', 'brand companyName brandLogo')
             .populate('state', 'name code')
             .populate('city', 'name')
             .populate('district', 'name')
@@ -388,7 +382,11 @@ export const createWarehouse = async (req, res) => {
         await warehouse.save();
         res.status(201).json({ success: true, data: warehouse });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error("Create Warehouse Error:", error);
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ success: false, message: error.message });
+        }
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -460,6 +458,134 @@ export const updateSettings = async (req, res) => {
         await settings.save();
         res.json({ success: true, data: settings });
     } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// ==================== INVENTORY PROJECTION ====================
+
+/**
+ * GET /api/inventory/projection?quarter=Q3&year=2025&brand=xxx&state=xxx&...
+ * Returns projected inventory (KW) for each filtered item based on historical growth trend.
+ */
+export const getProjectedInventory = async (req, res) => {
+    try {
+        const { quarter, year, brand, state, cluster, technology, watt, sku } = req.query;
+
+        // Helper: get date range for a given quarter + year
+        const getQuarterRange = (q, y) => {
+            const yr = parseInt(y) || new Date().getFullYear();
+            const map = {
+                Q1: [new Date(`${yr}-01-01`), new Date(`${yr}-03-31T23:59:59`)],
+                Q2: [new Date(`${yr}-04-01`), new Date(`${yr}-06-30T23:59:59`)],
+                Q3: [new Date(`${yr}-07-01`), new Date(`${yr}-09-30T23:59:59`)],
+                Q4: [new Date(`${yr}-10-01`), new Date(`${yr}-12-31T23:59:59`)],
+            };
+            return map[q] || null;
+        };
+
+        // Build base filter
+        const baseFilter = {};
+        if (brand && mongoose.Types.ObjectId.isValid(brand)) baseFilter.brand = brand;
+        if (state && mongoose.Types.ObjectId.isValid(state)) baseFilter.state = state;
+        if (cluster && mongoose.Types.ObjectId.isValid(cluster)) baseFilter.cluster = cluster;
+        if (technology) baseFilter.technology = technology;
+        if (watt) baseFilter.wattage = Number(watt);
+        if (sku) baseFilter.sku = sku;
+
+        // Fetch all matching items (not time-filtered, to get full historical picture)
+        const items = await InventoryItem.find(baseFilter)
+            .populate('brand', 'brand companyName')
+            .sort({ createdAt: 1 });
+
+        if (!items.length) {
+            return res.json({ success: true, data: [] });
+        }
+
+        const targetQuarter = quarter || 'Q1';
+        const targetYear = parseInt(year) || new Date().getFullYear();
+
+        // For each item, collect quarterly usage (quantity * wattage / 1000 = KW)
+        // We look at up to 4 prior quarters
+        const quarterOrder = ['Q1', 'Q2', 'Q3', 'Q4'];
+        const targetQIdx = quarterOrder.indexOf(targetQuarter);
+
+        // Build list of previous quarters (up to 4) before target
+        const prevQuarters = [];
+        let tempQ = targetQIdx;
+        let tempY = targetYear;
+        for (let i = 0; i < 4; i++) {
+            tempQ--;
+            if (tempQ < 0) { tempQ = 3; tempY--; }
+            prevQuarters.unshift({ q: quarterOrder[tempQ], y: tempY });
+        }
+
+        // For each item compute the KW per previous quarter
+        const projections = [];
+
+        for (const item of items) {
+            const kwPerQuarter = [];
+
+            for (const { q, y } of prevQuarters) {
+                const range = getQuarterRange(q, y);
+                if (!range) { kwPerQuarter.push(null); continue; }
+
+                // Find all inventory events for this item in this quarter
+                // Since inventory is cumulative (quantity on hand), we approximate usage
+                // as the quantity stored in that period range.
+                const snapshot = await InventoryItem.findOne({
+                    _id: item._id,
+                    updatedAt: { $gte: range[0], $lte: range[1] }
+                });
+                // Approx: use quantity * wattage / 1000 at that snapshot, else null
+                const kw = snapshot ? (snapshot.quantity * (snapshot.wattage || 0)) / 1000 : null;
+                kwPerQuarter.push(kw);
+            }
+
+            // Filter out null values
+            const validKw = kwPerQuarter.filter(v => v !== null);
+
+            let projectedKw = (item.quantity * (item.wattage || 0)) / 1000; // fallback = current
+
+            if (validKw.length >= 2) {
+                // Weighted average growth rate (more recent = higher weight)
+                const growthRates = [];
+                for (let i = 1; i < validKw.length; i++) {
+                    if (validKw[i - 1] > 0) {
+                        growthRates.push((validKw[i] - validKw[i - 1]) / validKw[i - 1]);
+                    }
+                }
+                if (growthRates.length > 0) {
+                    // Weighted average: most recent growth counts more
+                    let totalWeight = 0;
+                    let weightedSum = 0;
+                    growthRates.forEach((rate, idx) => {
+                        const weight = idx + 1;
+                        weightedSum += rate * weight;
+                        totalWeight += weight;
+                    });
+                    const avgGrowth = weightedSum / totalWeight;
+                    const lastKw = validKw[validKw.length - 1];
+                    projectedKw = Math.max(0, lastKw * (1 + avgGrowth));
+                } else if (validKw.length === 1) {
+                    projectedKw = validKw[0];
+                }
+            } else if (validKw.length === 1) {
+                projectedKw = validKw[0];
+            }
+
+            projections.push({
+                itemId: item._id,
+                sku: item.sku,
+                projectedKw: Math.round(projectedKw * 100) / 100,
+                historicalKw: validKw,
+                currentKw: (item.quantity * (item.wattage || 0)) / 1000
+            });
+        }
+
+        res.json({ success: true, data: projections });
+    } catch (error) {
+        console.error('Projection Error:', error);
         res.status(500).json({ message: error.message });
     }
 };

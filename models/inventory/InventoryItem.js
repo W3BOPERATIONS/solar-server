@@ -9,7 +9,7 @@ const inventoryItemSchema = new mongoose.Schema(
         },
         brand: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Brand',
+            ref: 'BrandManufacturer',
             required: true,
         },
         category: {
