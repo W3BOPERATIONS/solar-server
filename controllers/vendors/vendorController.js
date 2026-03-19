@@ -70,43 +70,23 @@ export const deleteInstallerVendor = async (req, res, next) => {
 export const getSupplierTypes = async (req, res, next) => {
     try {
         const { countryId, stateId, clusterId, districtId } = req.query;
-        let queries = [];
-        
-        // Always include completely global plans
-        queries.push({ countryId: null, stateId: null, clusterId: null, districtId: null });
+        let query = {};
 
-        if (countryId) queries.push({ countryId: countryId, stateId: null, clusterId: null, districtId: null });
-        if (stateId) queries.push({ stateId: stateId, clusterId: null, districtId: null });
-        if (clusterId) queries.push({ clusterId: clusterId, districtId: null });
-        if (districtId) queries.push({ districtId: districtId });
-
-        const query = queries.length > 0 ? { $or: queries } : {};
+        // Build precise query based on what is selected
+        if (districtId) query.districtId = districtId;
+        else if (clusterId) query.clusterId = clusterId;
+        else if (stateId) query.stateId = stateId;
+        else if (countryId) query.countryId = countryId;
 
         const types = await SupplierType.find(query)
             .populate('countryId', 'name')
             .populate('stateId', 'name')
             .populate('clusterId', 'name')
             .populate('districtId', 'name')
+            .sort({ createdAt: -1 })
             .lean();
 
-        // deduplicate by loginTypeName, preferring more specific ones
-        const typeMap = new Map();
-        for (const t of types) {
-            let score = 0;
-            if (t.districtId) score = 4;
-            else if (t.clusterId) score = 3;
-            else if (t.stateId) score = 2;
-            else if (t.countryId) score = 1;
-
-            if (!typeMap.has(t.loginTypeName) || typeMap.get(t.loginTypeName).score < score) {
-                t.score = score;
-                typeMap.set(t.loginTypeName, t);
-            }
-        }
-        
-        const finalTypes = Array.from(typeMap.values()).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-            
-        res.status(200).json({ success: true, count: finalTypes.length, data: finalTypes });
+        res.status(200).json({ success: true, count: types.length, data: types });
     } catch (err) {
         next(err);
     }
@@ -116,26 +96,35 @@ export const createSupplierType = async (req, res, next) => {
     try {
         const { loginTypeName, countryId, stateId, clusterId, districtId } = req.body;
 
+        if (!loginTypeName || !loginTypeName.trim()) {
+            return res.status(400).json({ success: false, message: 'Login Type Name is required' });
+        }
+
         const finalCountryId = countryId || null;
         const finalStateId = stateId || null;
         const finalClusterId = clusterId || null;
         const finalDistrictId = districtId || null;
 
-        const payload = { ...req.body, countryId: finalCountryId, stateId: finalStateId, clusterId: finalClusterId, districtId: finalDistrictId };
-        const filter = { loginTypeName, countryId: finalCountryId, stateId: finalStateId, clusterId: finalClusterId, districtId: finalDistrictId };
+        const updatePayload = {
+            ...req.body,
+            loginTypeName: loginTypeName.trim(),
+            countryId: finalCountryId,
+            stateId: finalStateId,
+            clusterId: finalClusterId,
+            districtId: finalDistrictId
+        };
 
+        // Use loginTypeName as the unique filter - update if exists, insert if not
         const type = await SupplierType.findOneAndUpdate(
-            filter,
-            payload,
-            { new: true, upsert: true, runValidators: true }
+            { loginTypeName: loginTypeName.trim() },
+            { $set: updatePayload },
+            { new: true, upsert: true, setDefaultsOnInsert: true, runValidators: false }
         );
 
         res.status(200).json({ success: true, data: type, message: 'Supplier Type saved successfully' });
     } catch (err) {
-        if (err.code === 11000) {
-            return res.status(400).json({ success: false, message: 'Supplier Type already exists' });
-        }
-        next(err);
+        console.error('SupplierType Save Error:', err);
+        res.status(500).json({ success: false, message: err.message });
     }
 };
 

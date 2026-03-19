@@ -28,24 +28,20 @@ const supplierTypeSchema = new mongoose.Schema(
             default: null
         },
         category: {
-            type: String,
-            trim: true,
-            default: "",
+            type: [String],
+            default: [],
         },
         subCategory: {
-            type: String,
-            trim: true,
-            default: "",
+            type: [String],
+            default: [],
         },
         projectType: {
-            type: String,
-            trim: true,
-            default: "",
+            type: [String],
+            default: [],
         },
         subType: {
-            type: String,
-            trim: true,
-            default: "",
+            type: [String],
+            default: [],
         },
         assignModules: {
             type: String,
@@ -61,6 +57,10 @@ const supplierTypeSchema = new mongoose.Schema(
             type: String,
             trim: true,
             default: "",
+        },
+        modulesTasks: {
+            type: [String],
+            default: [],
         },
     },
     {
