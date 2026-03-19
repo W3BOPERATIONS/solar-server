@@ -4,13 +4,11 @@ import ModuleCompletion from '../../models/settings/ModuleCompletion.js';
 export const getLoanRules = async (req, res) => {
     try {
         const { clusterId } = req.query;
-        console.log('GET /api/loan - clusterId:', clusterId);
         let query = {};
         if (clusterId && clusterId !== 'undefined') {
             query.clusterId = clusterId;
         }
         const rules = await LoanRule.find(query);
-        console.log(`GET /api/loan - Found ${rules.length} rules`);
         res.status(200).json(rules);
     } catch (error) {
         console.error('GET /api/loan Error:', error);
@@ -21,7 +19,6 @@ export const getLoanRules = async (req, res) => {
 export const createLoanRule = async (req, res) => {
     try {
         const { clusterId, projectType, interestRate, tenureMonths, maxAmount, fields } = req.body;
-        console.log('POST /api/loan - Body:', { projectType, clusterId });
 
         // Normalize projectType for consistent checking
         const normalizedPT = projectType.charAt(0).toUpperCase() + projectType.slice(1).toLowerCase();
@@ -43,7 +40,6 @@ export const createLoanRule = async (req, res) => {
 
         const existing = await LoanRule.findOne(query);
         if (existing) {
-            console.log('POST /api/loan - Duplicate found:', existing._id);
             return res.status(400).json({ message: `Loan rule for ${normalizedPT} already exists` });
         }
 
@@ -58,7 +54,6 @@ export const createLoanRule = async (req, res) => {
         });
 
         await newRule.save();
-        console.log('POST /api/loan - Saved new rule:', newRule._id);
         if (newRule.clusterId) {
             await updateLoanCompletion(newRule.clusterId);
         }
@@ -74,7 +69,6 @@ export const updateLoanRule = async (req, res) => {
     try {
         const { id } = req.params;
         const data = req.body;
-        console.log(`PUT /api/loan/${id} - Body:`, { projectType: data.projectType });
 
         if (data.projectType) {
             data.projectType = data.projectType.charAt(0).toUpperCase() + data.projectType.slice(1).toLowerCase();
@@ -83,11 +77,8 @@ export const updateLoanRule = async (req, res) => {
         const updatedRule = await LoanRule.findByIdAndUpdate(id, data, { new: true });
 
         if (!updatedRule) {
-            console.log(`PUT /api/loan/${id} - Not found`);
             return res.status(404).json({ message: 'Loan rule not found' });
         }
-
-        console.log(`PUT /api/loan/${id} - Updated:`, updatedRule._id);
         if (updatedRule.clusterId) {
             await updateLoanCompletion(updatedRule.clusterId);
         }

@@ -3,10 +3,11 @@ import Product from '../../models/inventory/Product.js';
 
 export const getAllSKUs = async (req, res, next) => {
     try {
-        const { status, brand, category, projectType, productType, technology, wattage } = req.query;
+        const { status, brand, product, category, projectType, productType, technology, wattage } = req.query;
         const query = {};
         if (status !== undefined) query.status = status === 'true';
         if (brand) query.brand = brand;
+        if (product) query.product = product;
         if (category) query.category = category;
         if (projectType) query.projectType = projectType;
         if (productType) query.productType = productType;

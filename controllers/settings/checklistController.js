@@ -155,33 +155,6 @@ export const seedChecklists = async (req, res) => {
             );
         }
 
-        // 2. Initial Sample Templates if none exist
-        const count = await ChecklistTemplate.countDocuments();
-        if (count === 0) {
-            const sampleTemplates = [
-                {
-                    name: "Primary Location Check",
-                    category: "Location Setting",
-                    status: "active",
-                    completionStatus: "completed",
-                    items: [
-                        { itemName: "Verify State Presence", required: true, order: 1 },
-                        { itemName: "Check Cluster Map", required: true, order: 2 }
-                    ]
-                },
-                {
-                    name: "Department Heads",
-                    category: "HR Setting",
-                    status: "active",
-                    completionStatus: "pending",
-                    items: [
-                        { itemName: "List all departments", required: true, order: 1 }
-                    ]
-                }
-            ];
-            await ChecklistTemplate.insertMany(sampleTemplates);
-        }
-
         res.status(200).json({ message: "Database seeded successfully" });
     } catch (error) {
         res.status(500).json({ message: error.message });

@@ -219,7 +219,7 @@ export const getRestockLimits = async (req, res) => {
         if (district) query.district = district;
 
         const items = await InventoryItem.find(query)
-            .populate('brand', 'brandName')
+            .populate('brand', 'brand comboKit')
             .populate('state', 'name')
             .populate('city', 'name')
             .populate('district', 'name');
@@ -303,54 +303,77 @@ export const getInventorySummary = async (req, res) => {
     }
 };
 
-// Get Combokit/Brand Overview
+// Get Combokit/Brand Overview - Fully Dynamic
 export const getBrandOverview = async (req, res) => {
     try {
-        const { state, city, district } = req.query;
+        const { state, cluster, district } = req.query;
         const match = {};
-        if (state) match.state = new mongoose.Types.ObjectId(state);
-        if (city) match.city = new mongoose.Types.ObjectId(city);
-        if (district) match.district = new mongoose.Types.ObjectId(district);
 
-        // Group by Item Name -> Brands available
-        // Return structured data for "Combokit Brand SKU Overview"
-        // UI wants: Product Name -> List of Brands -> SKU count per brand
+        // Location filters (matching SKU location fields)
+        if (state && mongoose.Types.ObjectId.isValid(state)) match.state = new mongoose.Types.ObjectId(state);
+        if (cluster && mongoose.Types.ObjectId.isValid(cluster)) match.cluster = new mongoose.Types.ObjectId(cluster);
+        // Note: SKU doesn't directly have district, but we could match via Product if needed.
 
-        const overview = await InventoryItem.aggregate([
+        const SKU = mongoose.model('SKU');
+
+        const aggregation = [
             { $match: match },
-            {
-                $group: {
-                    _id: { productName: "$itemName", brand: "$brand" },
-                    skuCount: { $sum: 1 }
-                }
-            },
+            // Join with Product model
             {
                 $lookup: {
-                    from: "brands",
-                    localField: "_id.brand",
+                    from: "products",
+                    localField: "product",
+                    foreignField: "_id",
+                    as: "productInfo"
+                }
+            },
+            { $unwind: "$productInfo" },
+            // Join with BrandManufacturer model
+            {
+                $lookup: {
+                    from: "brandmanufacturers",
+                    localField: "brand",
                     foreignField: "_id",
                     as: "brandInfo"
                 }
             },
+            { $unwind: "$brandInfo" },
+            // Group by Product Name AND Brand Name
             {
-                $unwind: "$brandInfo"
+                $group: {
+                    _id: {
+                        productId: "$productInfo._id",
+                        productName: "$productInfo.name",
+                        brandId: "$brandInfo._id",
+                        brandName: "$brandInfo.brand",
+                        brandLogo: "$brandInfo.logo"
+                    },
+                    skuCount: { $sum: 1 }
+                }
             },
+            // Group by Product Name
             {
                 $group: {
                     _id: "$_id.productName",
                     brands: {
                         $push: {
-                            brandName: "$brandInfo.brandName",
-                            logo: "$brandInfo.logo",
+                            productId: "$_id.productId",
+                            brandId: "$_id.brandId",
+                            brandName: "$_id.brandName",
+                            logo: "$_id.brandLogo",
                             skus: "$skuCount"
                         }
                     }
                 }
-            }
-        ]);
+            },
+            { $sort: { _id: 1 } }
+        ];
+
+        const overview = await SKU.aggregate(aggregation);
 
         res.json(overview);
     } catch (error) {
+        console.error('Brand Overview Dynamic Fetch Error:', error);
         res.status(500).json({ message: error.message });
     }
 };
