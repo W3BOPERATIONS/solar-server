@@ -11,14 +11,12 @@ const skuItemSchema = new mongoose.Schema({
         required: true,
         min: 0
     },
-    comboKit: {
+    assignModules: [String],
+    supplierType: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'ComboKitAssignment'
-    },
-    supplierType: {
-        type: String,
+        ref: 'SupplierType',
         required: true
-    }
+    }]
 });
 
 const orderProcurementSettingSchema = new mongoose.Schema(
@@ -48,6 +46,11 @@ const orderProcurementSettingSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'BrandManufacturer',
             required: true
+        },
+        paymentType: {
+            type: String,
+            enum: ['Cash', 'Loan', 'EMI', 'None'],
+            default: 'None'
         },
         skuSelectionOption: {
             type: String,

@@ -26,7 +26,7 @@ export const getAllMappings = async (req, res, next) => {
 
 export const createMapping = async (req, res, next) => {
     try {
-        const { stateId, clusterIds, categoryId, subCategoryId, projectTypeFrom, projectTypeTo, subProjectTypeId } = req.body;
+        const { stateId, clusterIds, categoryId, subCategoryId, projectTypeFrom, projectTypeTo, subProjectTypeId, deliveryCharges } = req.body;
 
         if (!stateId || !clusterIds || !Array.isArray(clusterIds) || clusterIds.length === 0 || !categoryId || !subCategoryId || projectTypeFrom === undefined || projectTypeTo === undefined) {
             return res.status(400).json({ success: false, message: 'All required mapping fields must be provided, and clusters must be an array.' });
@@ -40,6 +40,7 @@ export const createMapping = async (req, res, next) => {
             projectTypeFrom,
             projectTypeTo,
             subProjectTypeId,
+            deliveryCharges: Number(deliveryCharges) || 0,
             createdBy: req.user?.id
         }));
 
@@ -65,7 +66,7 @@ export const createMapping = async (req, res, next) => {
 
 export const updateMapping = async (req, res, next) => {
     try {
-        const { stateId, clusterId, categoryId, subCategoryId, projectTypeFrom, projectTypeTo, subProjectTypeId, status } = req.body;
+        const { stateId, clusterId, categoryId, subCategoryId, projectTypeFrom, projectTypeTo, subProjectTypeId, status, deliveryCharges } = req.body;
 
         const mapping = await ProjectCategoryMapping.findByIdAndUpdate(
             req.params.id,
@@ -78,6 +79,7 @@ export const updateMapping = async (req, res, next) => {
                 projectTypeTo,
                 subProjectTypeId,
                 status,
+                deliveryCharges: Number(deliveryCharges) || 0,
                 updatedBy: req.user?.id
             },
             { new: true, runValidators: true }

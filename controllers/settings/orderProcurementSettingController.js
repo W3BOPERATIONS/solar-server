@@ -8,7 +8,7 @@ export const getAllSettings = async (req, res, next) => {
         const settings = await OrderProcurementSetting.find()
             .populate('product', 'name')
             .populate('brand', 'name')
-            .populate('skuItems.comboKit', 'comboKits')
+            .populate('skuItems.supplierType', 'loginTypeName')
             .sort({ createdAt: -1 });
 
         res.json({
@@ -28,7 +28,7 @@ export const getSettingById = async (req, res, next) => {
         const setting = await OrderProcurementSetting.findById(req.params.id)
             .populate('product', 'name')
             .populate('brand', 'name')
-            .populate('skuItems.comboKit', 'comboKits');
+            .populate('skuItems.supplierType', 'loginTypeName');
 
         if (!setting) {
             return res.status(404).json({

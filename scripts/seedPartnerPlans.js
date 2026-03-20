@@ -1,19 +1,20 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import PartnerPlan from './models/partner/PartnerPlan.js';
-import Partner from './models/partner/Partner.js';
+import PartnerPlan from '../models/partner/PartnerPlan.js';
+import Partner from '../models/partner/Partner.js';
 
 dotenv.config();
 
 const seedPlans = async () => {
     try {
+        console.log('⏳ Connecting to MongoDB...');
         await mongoose.connect(process.env.MONGODB_URI);
-        console.log('Connected to MongoDB');
+        console.log('✅ Connected to MongoDB');
 
         // We need a partner and a state. We'll pick the first available or default to something.
         const partner = await Partner.findOne();
         let partnerType = 'Dealer';
-        if (partner) {
+        if (partner && partner.name) {
             partnerType = partner.name;
         }
 
@@ -130,7 +131,7 @@ const seedPlans = async () => {
                     iconColor: 'text-yellow-600',
                     bgColor: 'bg-yellow-50'
                 },
-                 config: {
+                config: {
                     kyc: { aadhar: true, pan: true, gst: true, verifiedPartner: true, notVerifiedPartner: false },
                     eligibility: { kyc: true, agreement: true, depositCheque: true, gstRequired: true, gstAmount: '', depositAmount: '50000', noCashback: false },
                     coverage: { area: 'National Level', city: true, district: true, cluster: true, state: true },
@@ -144,7 +145,6 @@ const seedPlans = async () => {
             }
         ];
 
-        // Insert using model logic. We'll find existing and update, or create new to avoid dupes if run multiple times.
         for (const planData of plans) {
             const existing = await PartnerPlan.findOne({ name: planData.name, partnerType: planData.partnerType });
             if (existing) {
@@ -155,11 +155,11 @@ const seedPlans = async () => {
             }
         }
 
-        console.log('Seeding complete.');
+        console.log('✅ Seeding complete.');
         process.exit(0);
 
     } catch (error) {
-        console.error('Error seeding plans:', error);
+        console.error('❌ Error seeding plans:', error);
         process.exit(1);
     }
 };

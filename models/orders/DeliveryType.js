@@ -28,11 +28,16 @@ const deliveryTypeSchema = new mongoose.Schema(
       type: String,
       enum: ['Cluster', 'District', 'State'],
     }],
+    coverageRange: {
+      type: Number,
+      default: 0
+    },
     applicableCategories: [{
       category: String,
       subCategory: String,
       projectType: String,
       subProjectType: String,
+      cluster: String,
       cost: Number,
       isActive: { type: Boolean, default: true }
     }],

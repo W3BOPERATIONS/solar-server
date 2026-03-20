@@ -37,6 +37,10 @@ const projectCategoryMappingSchema = new mongoose.Schema(
             ref: 'SubProjectType',
             required: false // Based on the screenshot, it might be optional or required depending on business logic, but it's present.
         },
+        deliveryCharges: {
+            type: Number,
+            default: 0
+        },
         status: {
             type: Boolean,
             default: true,
