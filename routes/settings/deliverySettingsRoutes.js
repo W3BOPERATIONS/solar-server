@@ -17,7 +17,7 @@ import {
     getVendorDeliveryPlans,
     createVendorDeliveryPlan,
     updateVendorDeliveryPlan,
-    deleteVendorDeliveryPlan,
+    deleteVendorDeliveryPlan, deleteApplicableCategory, addApplicableCategory, updateApplicableCategory,
 } from '../../controllers/settings/deliverySettingsController.js';
 
 const router = express.Router();
@@ -30,6 +30,13 @@ router.route('/types')
 router.route('/types/:id')
     .put(updateDeliveryType)
     .delete(deleteDeliveryType);
+
+router.route('/types/:id/categories')
+    .post(addApplicableCategory);
+
+router.route('/types/:id/categories/:categoryId')
+    .put(updateApplicableCategory)
+    .delete(deleteApplicableCategory);
 
 // Benchmark Prices
 router.route('/benchmark-prices')

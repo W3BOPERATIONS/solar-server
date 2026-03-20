@@ -289,3 +289,66 @@ export const deleteVendorDeliveryPlan = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+// ==========================================
+// Applicable Categories (Nested)
+// ==========================================
+
+export const deleteApplicableCategory = async (req, res) => {
+    try {
+        const { id, categoryId } = req.params;
+        const type = await DeliveryType.findByIdAndUpdate(
+            id,
+            { $pull: { applicableCategories: { _id: categoryId } } },
+            { new: true }
+        ).populate(['state', 'cluster', 'district']);
+
+        if (!type) {
+            return res.status(404).json({ success: false, message: 'Delivery type not found' });
+        }
+        res.status(200).json({ success: true, data: type });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const addApplicableCategory = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const type = await DeliveryType.findByIdAndUpdate(
+            id,
+            { $push: { applicableCategories: req.body } },
+            { new: true }
+        ).populate(['state', 'cluster', 'district']);
+
+        if (!type) {
+            return res.status(404).json({ success: false, message: 'Delivery type not found' });
+        }
+        res.status(200).json({ success: true, data: type });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const updateApplicableCategory = async (req, res) => {
+    try {
+        const { id, categoryId } = req.params;
+        // Construct the $set object for the specific array element
+        const updateObj = {};
+        for (const [key, value] of Object.entries(req.body)) {
+            updateObj[`applicableCategories.$.${key}`] = value;
+        }
+
+        const type = await DeliveryType.findOneAndUpdate(
+            { _id: id, "applicableCategories._id": categoryId },
+            { $set: updateObj },
+            { new: true }
+        ).populate(['state', 'cluster', 'district']);
+
+        if (!type) {
+            return res.status(404).json({ success: false, message: 'Delivery type or category not found' });
+        }
+        res.status(200).json({ success: true, data: type });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};

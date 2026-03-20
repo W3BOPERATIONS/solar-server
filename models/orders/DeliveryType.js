@@ -41,6 +41,12 @@ const deliveryTypeSchema = new mongoose.Schema(
       maxDays: Number,
       estimatedDelivery: String
     },
+    restrictions: {
+      districts: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'District'
+      }]
+    },
     status: {
       type: String,
       enum: ['active', 'inactive'],
