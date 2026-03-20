@@ -39,7 +39,9 @@ const deliveryTypeSchema = new mongoose.Schema(
     deliveryTiming: {
       minDays: Number,
       maxDays: Number,
-      estimatedDelivery: String
+      estimatedDelivery: String,
+      deliveryCharges: Number,
+      procurementResults: [String]
     },
     restrictions: {
       districts: [{
