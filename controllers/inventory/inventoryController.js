@@ -207,21 +207,19 @@ export const getBrands = async (req, res) => {
 // Restock Limits
 export const getRestockLimits = async (req, res) => {
     try {
-        const { state, city, district } = req.query;
+        const { state, city, district, cluster } = req.query;
         // Logic to get items and their limits.
-        // The UI lists inventory items and allows setting a limit.
-        // We can fetch items and populate their limit? Or fetch Limits and populate items?
-        // UI is "Inventory Restock Limit Setting", likely list by location.
-
+        
         const query = {};
         if (state) query.state = state;
+        if (cluster) query.cluster = cluster;
         if (city) query.city = city;
         if (district) query.district = district;
 
         const items = await InventoryItem.find(query)
             .populate('brand', 'brand comboKit')
             .populate('state', 'name')
-            .populate('city', 'name')
+            .populate('cluster', 'name')
             .populate('district', 'name');
 
         // Fetch limits for these items
