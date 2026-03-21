@@ -12,7 +12,7 @@ const vehicleSchema = new mongoose.Schema(
             required: true,
         },
         deliveryType: {
-            type: String, // e.g., 'Prime', 'Regular'
+            type: [String], // e.g., ['Prime', 'Regular']
             required: true,
         },
         dimensions: {
@@ -36,10 +36,10 @@ const vehicleSchema = new mongoose.Schema(
             type: Number, // Maximum Range
         },
         orderType: {
-            type: String, // 'Combokit', 'CustomKit'
+            type: [String], // ['Combokit', 'CustomKit']
         },
         locationType: {
-            type: String, // 'Rural', 'Urban'
+            type: [String], // ['Rural', 'Urban']
         },
         image: {
             type: String, // URL or Base64
