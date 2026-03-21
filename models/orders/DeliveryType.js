@@ -24,6 +24,10 @@ const deliveryTypeSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'District',
     },
+    warehouse: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Warehouse'
+    },
     coverageType: [{
       type: String,
       enum: ['Cluster', 'District', 'State'],

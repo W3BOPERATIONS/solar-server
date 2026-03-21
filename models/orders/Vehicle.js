@@ -44,6 +44,26 @@ const vehicleSchema = new mongoose.Schema(
         image: {
             type: String, // URL or Base64
         },
+        country: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Country',
+        },
+        state: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'State',
+        },
+        cluster: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Cluster',
+        },
+        district: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'District',
+        },
+        warehouse: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Warehouse',
+        },
         status: {
             type: String,
             enum: ['active', 'inactive'],

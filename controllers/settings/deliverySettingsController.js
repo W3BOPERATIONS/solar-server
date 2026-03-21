@@ -15,15 +15,35 @@ export const getDeliveryTypes = async (req, res) => {
             await DeliveryType.collection.dropIndex('name_1');
         } catch (e) { }
 
-        const { state, cluster, district } = req.query;
+        const { state, cluster, warehouse, district, status, includeGlobal } = req.query;
         let filter = {};
-        if (state) filter.state = state;
-        if (cluster) filter.cluster = cluster;
-        if (district) filter.district = district;
+        if (status) filter.status = status;
+
+        if (includeGlobal === 'true' && (state || cluster || warehouse || district)) {
+            filter.$or = [
+                // Global types (no specific location mapping)
+                { state: null, cluster: null, warehouse: null, district: null },
+                // Types matching current filters exactly for their hierarchy level
+                {
+                    $and: [
+                        state ? { state } : {},
+                        cluster ? { cluster } : {},
+                        warehouse ? { warehouse } : {},
+                        district ? { district } : {}
+                    ].filter(c => Object.keys(c).length > 0)
+                }
+            ];
+        } else {
+            if (state) filter.state = state;
+            if (cluster) filter.cluster = cluster;
+            if (warehouse) filter.warehouse = warehouse;
+            if (district) filter.district = district;
+        }
 
         const types = await DeliveryType.find(filter)
             .populate('state', 'name')
             .populate('cluster', 'name')
+            .populate('warehouse', 'name')
             .populate('district', 'name')
             .sort({ createdAt: -1 });
         res.status(200).json({ success: true, count: types.length, data: types });
@@ -35,7 +55,7 @@ export const getDeliveryTypes = async (req, res) => {
 export const createDeliveryType = async (req, res) => {
     try {
         const type = await DeliveryType.create(req.body);
-        await type.populate(['state', 'cluster', 'district']);
+        await type.populate(['state', 'cluster', 'warehouse', 'district']);
         res.status(201).json({ success: true, data: type });
     } catch (error) {
         // Handle generic errors since unique constraint is removed
@@ -48,7 +68,7 @@ export const updateDeliveryType = async (req, res) => {
         const type = await DeliveryType.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
             runValidators: true,
-        }).populate(['state', 'cluster', 'district']);
+        }).populate(['state', 'cluster', 'warehouse', 'district']);
 
         if (!type) {
             return res.status(404).json({ success: false, message: 'Delivery type not found' });
@@ -153,7 +173,20 @@ export const deleteBenchmarkPrice = async (req, res) => {
 
 export const getVehicles = async (req, res) => {
     try {
-        const vehicles = await Vehicle.find().sort({ createdAt: -1 });
+        const { state, cluster, warehouse, district, status } = req.query;
+        let filter = {};
+        if (state) filter.state = state;
+        if (cluster) filter.cluster = cluster;
+        if (warehouse) filter.warehouse = warehouse;
+        if (district) filter.district = district;
+        if (status) filter.status = status;
+
+        const vehicles = await Vehicle.find(filter)
+            .populate('state', 'name')
+            .populate('cluster', 'name')
+            .populate('warehouse', 'name')
+            .populate('district', 'name')
+            .sort({ createdAt: -1 });
         res.status(200).json({ success: true, count: vehicles.length, data: vehicles });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -163,6 +196,7 @@ export const getVehicles = async (req, res) => {
 export const createVehicle = async (req, res) => {
     try {
         const vehicle = await Vehicle.create(req.body);
+        await vehicle.populate(['state', 'cluster', 'warehouse', 'district']);
         res.status(201).json({ success: true, data: vehicle });
     } catch (error) {
         if (error.code === 11000) {
@@ -177,7 +211,7 @@ export const updateVehicle = async (req, res) => {
         const vehicle = await Vehicle.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
             runValidators: true,
-        });
+        }).populate(['state', 'cluster', 'warehouse', 'district']);
         if (!vehicle) {
             return res.status(404).json({ success: false, message: 'Vehicle not found' });
         }
