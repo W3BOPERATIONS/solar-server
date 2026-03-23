@@ -99,7 +99,7 @@ export const getProjectConfigurations = async (req, res) => {
 export const getProjectConfigurationByKey = async (req, res) => {
     try {
         const { key } = req.params;
-        const config = await ProjectConfiguration.findOne({ configKey: key });
+        const config = await ProjectConfiguration.findOne({ configKey: key }).sort({ createdAt: -1 });
         res.status(200).json(config ? config.configValue : null);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -109,12 +109,23 @@ export const getProjectConfigurationByKey = async (req, res) => {
 export const saveProjectConfiguration = async (req, res) => {
     try {
         const { configKey, configValue } = req.body;
-        const config = await ProjectConfiguration.findOneAndUpdate(
-            { configKey },
-            { configValue, status: 'Active' },
-            { new: true, upsert: true, setDefaultsOnInsert: true }
-        );
+        const config = new ProjectConfiguration({
+            configKey,
+            configValue,
+            status: 'Active'
+        });
+        await config.save();
         res.status(200).json(config);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+export const deleteProjectConfigurationByKey = async (req, res) => {
+    try {
+        const { key } = req.params;
+        await ProjectConfiguration.findOneAndDelete({ configKey: key });
+        res.status(200).json({ message: 'Configuration deleted successfully' });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }

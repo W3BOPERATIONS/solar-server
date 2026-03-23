@@ -11,6 +11,7 @@
     "verify:checklist": "node scripts/verify_checklist_dynamic.js",
     "verify:loan": "node scripts/verify_loan_dynamic.js",
     "seed:performance": "node scripts/seedPerformance.js",
+    "seed:journey": "node scripts/seed_journey_stages.js",
     "seed:leads": "node scripts/seed_leads.js"
   },
   "dependencies": {

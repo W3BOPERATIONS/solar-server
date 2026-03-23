@@ -10,6 +10,7 @@ import {
     getProjectConfigurations,
     getProjectConfigurationByKey,
     saveProjectConfiguration,
+    deleteProjectConfigurationByKey,
     getProjectDocuments,
     createProjectDocument,
     updateProjectDocument,
@@ -37,6 +38,7 @@ router.post('/overdue', createOrUpdateOverdueSetting);
 router.get('/config', getProjectConfigurations);
 router.get('/config/:key', getProjectConfigurationByKey);
 router.post('/config', saveProjectConfiguration);
+router.delete('/config/:key', deleteProjectConfigurationByKey);
 
 // Project Documents
 router.get('/documents', getProjectDocuments);

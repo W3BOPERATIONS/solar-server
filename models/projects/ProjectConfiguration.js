@@ -3,8 +3,7 @@ import mongoose from 'mongoose';
 const projectConfigurationSchema = new mongoose.Schema({
     configKey: {
         type: String,
-        required: true,
-        unique: true
+        required: true
     },
     configValue: {
         type: mongoose.Schema.Types.Mixed,
