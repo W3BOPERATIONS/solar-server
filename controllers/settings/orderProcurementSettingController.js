@@ -5,9 +5,17 @@ import OrderProcurementSetting from '../../models/orders/OrderProcurementSetting
 // @access  Private
 export const getAllSettings = async (req, res, next) => {
     try {
-        const settings = await OrderProcurementSetting.find()
+        const query = {};
+        if (req.query.state) query.state = req.query.state;
+        if (req.query.cluster) query.cluster = req.query.cluster;
+        if (req.query.warehouse) query.warehouse = req.query.warehouse;
+
+        const settings = await OrderProcurementSetting.find(query)
             .populate('product', 'name')
             .populate('brand', 'name')
+            .populate('state', 'name')
+            .populate('cluster', 'name')
+            .populate('warehouse', 'name')
             .populate('skuItems.supplierType', 'loginTypeName')
             .sort({ createdAt: -1 });
 

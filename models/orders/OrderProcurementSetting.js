@@ -47,11 +47,10 @@ const orderProcurementSettingSchema = new mongoose.Schema(
             ref: 'BrandManufacturer',
             required: true
         },
-        paymentType: {
+        paymentType: [{
             type: String,
-            enum: ['Cash', 'Loan', 'EMI', 'None'],
-            default: 'None'
-        },
+            enum: ['Cash', 'Loan', 'EMI', 'None']
+        }],
         skuSelectionOption: {
             type: String,
             enum: ['ComboKit', 'Customize'],
@@ -63,6 +62,18 @@ const orderProcurementSettingSchema = new mongoose.Schema(
             ref: 'SKU'
         }],
         skuItems: [skuItemSchema],
+        state: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'State'
+        },
+        cluster: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Cluster'
+        },
+        warehouse: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Warehouse'
+        },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User'
