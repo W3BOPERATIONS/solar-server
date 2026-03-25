@@ -7,8 +7,19 @@ const projectJourneyStageSchema = new mongoose.Schema({
         trim: true
     },
     fields: [{
-        type: String,
-        trim: true
+        name: { type: String, required: true },
+        inputs: [{
+            label: { type: String, required: true },
+            type: { 
+                type: String, 
+                enum: ['text', 'textarea', 'upload', 'download', 'select', 'date'], 
+                default: 'text' 
+            },
+            required: { type: Boolean, default: false },
+            options: [String], // For dropdown/select
+            order: { type: Number, default: 0 }
+        }],
+        order: { type: Number, default: 0 }
     }],
     order: {
         type: Number,
