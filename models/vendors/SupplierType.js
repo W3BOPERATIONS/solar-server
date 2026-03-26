@@ -44,9 +44,8 @@ const supplierTypeSchema = new mongoose.Schema(
             default: [],
         },
         assignModules: {
-            type: String,
-            trim: true,
-            default: "",
+            type: [String],
+            default: [],
         },
         loginAccessType: {
             type: String,
