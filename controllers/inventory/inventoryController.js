@@ -150,9 +150,15 @@ export const updateInventoryItem = async (req, res) => {
     try {
         const { id } = req.params;
         const updateData = req.body;
-        updateData.updatedBy = req.user.id;
+        if (req.user) {
+            updateData.updatedBy = req.user.id;
+        }
 
-        const updatedItem = await InventoryItem.findByIdAndUpdate(id, updateData, { new: true });
+        const updatedItem = await InventoryItem.findByIdAndUpdate(id, updateData, { new: true })
+            .populate('brand', 'brand companyName brandLogo')
+            .populate('state', 'name code')
+            .populate('city', 'name')
+            .populate('district', 'name');
 
         if (!updatedItem) {
             return res.status(404).json({ message: 'Item not found' });
@@ -387,7 +393,11 @@ export const getAllWarehouses = async (req, res) => {
         if (district) filter.district = district;
 
         const warehouses = await Warehouse.find(filter)
-            .populate('state', 'name')
+            .populate({
+                path: 'state',
+                select: 'name country',
+                populate: { path: 'country', select: 'name' }
+            })
             .populate('cluster', 'name')
             .populate('district', 'name')
             .populate('city', 'name');
@@ -434,7 +444,11 @@ export const deleteWarehouse = async (req, res) => {
 export const getWarehouseById = async (req, res) => {
     try {
         const warehouse = await Warehouse.findById(req.params.id)
-            .populate('state', 'name')
+            .populate({
+                path: 'state',
+                select: 'name country',
+                populate: { path: 'country', select: 'name' }
+            })
             .populate('cluster', 'name')
             .populate('district', 'name')
             .populate('city', 'name');

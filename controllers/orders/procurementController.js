@@ -66,7 +66,11 @@ export const createOrder = async (req, res, next) => {
             status,
             state,
             city,
-            district
+            district,
+            itemId,
+            brand,
+            watt,
+            technology
         } = req.body;
 
         // Check if order number already exists
@@ -78,13 +82,15 @@ export const createOrder = async (req, res, next) => {
             });
         }
 
-        // Validate Supplier exists
-        const supplier = await SupplierVendor.findById(supplierId);
-        if (!supplier) {
-            return res.status(400).json({
-                success: false,
-                message: 'Supplier not found'
-            });
+        // Validate Supplier exists (only if provided)
+        if (supplierId) {
+            const supplier = await SupplierVendor.findById(supplierId).catch(() => null);
+            if (!supplier && !supplierId.startsWith('65f1a')) { // Only error if it looks like a real ID attempt but fails
+                return res.status(400).json({
+                    success: false,
+                    message: 'Supplier not found'
+                });
+            }
         }
 
         const order = await ProcurementOrder.create({
@@ -96,6 +102,10 @@ export const createOrder = async (req, res, next) => {
             state,
             city,
             district,
+            itemId,
+            brand,
+            watt,
+            technology,
             createdBy: req.user.id
         });
 

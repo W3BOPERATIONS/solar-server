@@ -273,37 +273,72 @@ export const bulkCreateCities = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'An array of cities is required' });
     }
 
-    // Prepare cities for insert
-    const citiesToInsert = cities.map(city => ({
-      name: city.name,
-      district: city.district,
-      state: city.state,
-      country: city.country,
-      areaType: city.areaType || 'Urban',
-      pincodes: city.pincodes || [],
-      description: city.description,
-      createdBy: req.user?.id,
-    }));
+    const total = cities.length;
+    let added = 0;
+    let skipped = 0;
 
-    // Verify all minimum required fields are present in every row
-    for (const city of citiesToInsert) {
-      if (!city.name || !city.district || !city.state || !city.country) {
-        return res.status(400).json({ success: false, message: 'Every city must have a Name, District, State, and Country' });
+    // 1. Filter internal duplicates (unique by Name + Pincodes string)
+    const uniqueInputs = [];
+    const seen = new Set();
+    
+    for (const city of cities) {
+      const pinKey = (city.pincodes || []).sort().join(',');
+      const key = `${city.name?.toLowerCase()}-${city.district}-${pinKey}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueInputs.push(city);
+      } else {
+        skipped++;
       }
     }
 
-    const createdCities = await City.insertMany(citiesToInsert, { ordered: false });
+    // 2. Process unique inputs against DB
+    const finalToInsert = [];
+    for (const cityData of uniqueInputs) {
+      if (!cityData.name || !cityData.district || !cityData.state || !cityData.country) {
+        skipped++;
+        continue;
+      }
 
-    res.status(201).json({ success: true, message: `${createdCities.length} cities created successfully`, count: createdCities.length });
-  } catch (err) {
-    // 11000 is Mongo's duplicate key error
-    if (err.code === 11000 && err.insertedDocs) {
-      return res.status(201).json({
-        success: true,
-        message: `${err.insertedDocs.length} cities created successfully, skipped duplicates.`,
-        count: err.insertedDocs.length
+      // Check for exact existing record
+      const existing = await City.findOne({
+        name: { $regex: new RegExp(`^${cityData.name}$`, 'i') },
+        district: cityData.district
       });
+
+      if (existing) {
+        // Rule: If same Name + District exists, check pincodes
+        const existingPins = new Set(existing.pincodes.map(p => String(p)));
+        const newPins = cityData.pincodes.filter(p => !existingPins.has(String(p)));
+
+        if (newPins.length === 0) {
+          // Exactly the same or subset, skip
+          skipped++;
+        } else {
+          // New pincodes for existing city? User said "Existing records... will not be duplicated"
+          // Let's assume skip if the city name already exists in that district to be safe,
+          // or we could merge. User's rule 2 says "skip during upload". 
+          skipped++;
+        }
+      } else {
+        finalToInsert.push({
+          ...cityData,
+          createdBy: req.user?.id
+        });
+      }
     }
+
+    if (finalToInsert.length > 0) {
+      const result = await City.insertMany(finalToInsert);
+      added = result.length;
+    }
+
+    res.status(201).json({ 
+      success: true, 
+      message: `Process complete: ${added} added, ${skipped} skipped.`,
+      summary: { total, added, skipped }
+    });
+  } catch (err) {
     next(err);
   }
 };

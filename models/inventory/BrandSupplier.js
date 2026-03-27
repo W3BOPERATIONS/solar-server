@@ -63,7 +63,7 @@ const brandSupplierSchema = new mongoose.Schema(
             required: true,
         },
         procurementType: {
-            type: String,
+            type: [String],
             required: true,
         },
 

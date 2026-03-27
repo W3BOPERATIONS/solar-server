@@ -1,4 +1,5 @@
 import Approval from '../../models/approvals/Approval.js';
+import ProcurementOrder from '../../models/orders/ProcurementOrder.js';
 
 // Get Approvals with filters
 export const getApprovals = async (req, res) => {
@@ -64,6 +65,19 @@ export const updateApprovalStatus = async (req, res) => {
 
         if (!updatedApproval) {
             return res.status(404).json({ message: 'Approval not found' });
+        }
+        
+        // SYNC EFFECT FOR INVENTORY TRACKING
+        if (status === 'Approved' && updatedApproval.type === 'inventory') {
+            const orderId = updatedApproval.data?.orderId;
+            if (orderId) {
+                try {
+                    await ProcurementOrder.findByIdAndUpdate(orderId, { status: 'Approval by Admin' });
+                    console.log(`✅ Procurement Order ${orderId} status updated via Admin Approval`);
+                } catch (syncErr) {
+                    console.error("Failed to sync status with ProcurementOrder", syncErr);
+                }
+            }
         }
 
         res.status(200).json(updatedApproval);
