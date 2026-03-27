@@ -45,8 +45,9 @@ const installerVendorPlanSchema = new mongoose.Schema(
             type: String
         }],
         teams: {
-            residential: { type: Number, default: 0 },
-            commercial: { type: Number, default: 0 }
+            type: Map,
+            of: Number,
+            default: new Map()
         },
         rates: {
             resOnGrid: { type: String, default: "0" },
@@ -55,8 +56,9 @@ const installerVendorPlanSchema = new mongoose.Schema(
             comOffGrid: { type: String, default: "0" }
         },
         weeklyKWAssign: {
-            residential: { type: String, default: "0" },
-            commercial: { type: String, default: "0" }
+            type: Map,
+            of: String,
+            default: new Map()
         }
     },
     {

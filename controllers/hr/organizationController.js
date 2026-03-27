@@ -65,7 +65,7 @@ export const getChartData = async (req, res, next) => {
 
         // Add States
         states.forEach(state => {
-            const parentConfig = countries.find(c => c._id.toString() === state.country.toString());
+            const parentConfig = countries.find(c => c._id?.toString() === state.country?.toString());
             if (parentConfig) {
                 chartData.push([
                     formatNode(state.name, state.name, 'State'),
@@ -77,8 +77,7 @@ export const getChartData = async (req, res, next) => {
 
         // Add Districts (Parent: State)
         districts.forEach(district => {
-            // District has state field.
-            const parentConfig = states.find(s => s._id.toString() === district.state.toString());
+            const parentConfig = states.find(s => s._id?.toString() === district.state?.toString());
             if (parentConfig) {
                 chartData.push([
                     formatNode(district.name, district.name, 'District'),
@@ -88,9 +87,12 @@ export const getChartData = async (req, res, next) => {
             }
         });
 
-        // Add Clusters (Parent: District)
         clusters.forEach(cluster => {
-            const parentConfig = districts.find(d => d._id.toString() === cluster.district.toString());
+            // Cluster has districts (array). Link to the first valid one as its parent in the chart.
+            const firstDistrictId = cluster.districts && cluster.districts[0];
+            if (!firstDistrictId) return;
+
+            const parentConfig = districts.find(d => d._id?.toString() === firstDistrictId.toString());
             if (parentConfig) {
                 chartData.push([
                     formatNode(cluster.name, cluster.name, 'Cluster'),

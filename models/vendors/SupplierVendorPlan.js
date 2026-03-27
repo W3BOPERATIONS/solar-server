@@ -27,6 +27,11 @@ const supplierVendorPlanSchema = new mongoose.Schema(
             ref: 'District',
             default: null
         },
+        warehouseId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Warehouse',
+            default: null
+        },
         kycDetails: [{
             type: String,
         }],

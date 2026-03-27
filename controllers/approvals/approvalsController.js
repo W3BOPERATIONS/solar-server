@@ -19,7 +19,7 @@ export const getApprovals = async (req, res) => {
 
         const approvals = await Approval.find(query).sort({ createdAt: -1 });
 
-        console.log(`Fetched approvals count: ${approvals.length}`); // REQUIRED BACKEND LOG
+        // approvals fetched successfully
 
         res.status(200).json(approvals);
     } catch (error) {
