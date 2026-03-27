@@ -23,16 +23,16 @@ const brandSupplierSchema = new mongoose.Schema(
             ref: 'Cluster',
             required: true,
         },
-        district: {
+        district: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: 'District',
             required: true,
-        },
-        city: {
+        }],
+        city: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: 'City',
             required: true,
-        },
+        }],
 
         // Links
         manufacturer: {
