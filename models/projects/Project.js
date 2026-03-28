@@ -8,6 +8,12 @@ const projectSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
+    entityType: {
+      type: String,
+      enum: ['company', 'partners', 'installer-agency'],
+      default: 'company',
+      required: true
+    },
     projectName: {
       type: String,
       required: true,

@@ -37,6 +37,15 @@ const installerVendorPlanSchema = new mongoose.Schema(
         projectTypes: [{
             type: String
         }],
+        categories: [{
+            type: String
+        }],
+        subProjectTypes: [{
+            type: String
+        }],
+        projectTypeRanges: [{
+            type: String
+        }],
         subscription: {
             type: String,
             default: "0"
@@ -50,10 +59,9 @@ const installerVendorPlanSchema = new mongoose.Schema(
             default: new Map()
         },
         rates: {
-            resOnGrid: { type: String, default: "0" },
-            resOffGrid: { type: String, default: "0" },
-            comOnGrid: { type: String, default: "0" },
-            comOffGrid: { type: String, default: "0" }
+            type: Map,
+            of: String,
+            default: new Map()
         },
         weeklyKWAssign: {
             type: Map,
@@ -66,7 +74,7 @@ const installerVendorPlanSchema = new mongoose.Schema(
     }
 );
 
-// Unique index dropped in favor of logical uniqueness handled in controller
-// installerVendorPlanSchema.index({ name: 1, districtId: 1 }, { unique: true });
+// Logical uniqueness is now handled in the fetch/save controller logic to allow multiple configs
+
 
 export default mongoose.model('InstallerVendorPlan', installerVendorPlanSchema);

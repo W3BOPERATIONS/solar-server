@@ -29,22 +29,7 @@ export const getInstallerVendorPlans = async (req, res, next) => {
             .populate('districtId', 'name')
             .lean(); // Use lean for modifying
 
-        // deduplicate by name, preferring more specific ones
-        const planMap = new Map();
-        for (const p of plans) {
-            let score = 0;
-            if (p.districtId) score = 4;
-            else if (p.clusterId) score = 3;
-            else if (p.stateId) score = 2;
-            else if (p.countryId) score = 1;
-
-            if (!planMap.has(p.name) || planMap.get(p.name).score < score) {
-                p.score = score;
-                planMap.set(p.name, p);
-            }
-        }
-        
-        const finalPlans = Array.from(planMap.values()).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        const finalPlans = plans.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
             
         res.status(200).json({ success: true, count: finalPlans.length, data: finalPlans });
     } catch (error) {
@@ -65,19 +50,23 @@ export const saveInstallerVendorPlan = async (req, res, next) => {
 
         const payload = { ...req.body, countryId: finalCountryId, stateId: finalStateId, clusterId: finalClusterId, districtId: finalDistrictId };
 
-        // Unique identifier for a plan is its name + its exact location scope
-        const filter = { name, countryId: finalCountryId, stateId: finalStateId, clusterId: finalClusterId, districtId: finalDistrictId };
-
-        const plan = await InstallerVendorPlan.findOneAndUpdate(
-            filter,
-            payload,
-            { new: true, upsert: true, runValidators: true }
-        );
+        let plan;
+        if (payload._id) {
+            // Update existing configuration
+            plan = await InstallerVendorPlan.findByIdAndUpdate(
+                payload._id,
+                payload,
+                { new: true, runValidators: true }
+            );
+        } else {
+            // Create new configuration row
+            plan = await InstallerVendorPlan.create(payload);
+        }
 
         res.status(200).json({ 
             success: true, 
             data: plan, 
-            message: 'Plan saved successfully' 
+            message: payload._id ? 'Configuration updated successfully' : 'New configuration appended successfully' 
         });
     } catch (error) {
         next(error);
