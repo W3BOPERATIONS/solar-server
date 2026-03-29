@@ -17,8 +17,7 @@ const installerToolSchema = new mongoose.Schema({
         required: false
     },
     projectType: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'ProjectType',
+        type: String,
         required: true
     },
     subType: {

@@ -62,6 +62,7 @@ export const getInstallerTools = async (req, res) => {
     try {
         const { projectCategory, subCategory, projectType, subType } = req.query;
         const query = {};
+        
         if (projectCategory) query.projectCategory = projectCategory;
         if (subCategory) query.subCategory = subCategory;
         if (projectType) query.projectType = projectType;
@@ -70,7 +71,6 @@ export const getInstallerTools = async (req, res) => {
         const tools = await InstallerTool.find(query)
             .populate('projectCategory', 'name')
             .populate('subCategory', 'name')
-            .populate('projectType', 'name')
             .populate('subType', 'name')
             .sort({ createdAt: -1 });
         res.status(200).json(tools);
@@ -213,12 +213,26 @@ import InstallerAgencyPlan from '../../models/vendors/InstallerAgencyPlan.js';
 
 export const getInstallerAgencyPlans = async (req, res) => {
     try {
-        const { stateId } = req.query;
+        const { countryId, stateId, clusterId, districtId, districtIds } = req.query;
         let query = {};
-        if (stateId) {
-            query.state = stateId;
+        if (countryId) query.country = countryId;
+        if (stateId) query.state = stateId;
+        if (clusterId) query.cluster = clusterId;
+
+        // Handle both single districtId and multi-select districtIds
+        if (districtIds) {
+            const ids = districtIds.split(',');
+            query.districts = { $in: ids };
+        } else if (districtId) {
+            query.districts = districtId;
         }
-        const plans = await InstallerAgencyPlan.find(query).sort({ createdAt: 1 }).populate('state', 'name abbreviation');
+
+        const plans = await InstallerAgencyPlan.find(query)
+            .sort({ createdAt: 1 })
+            .populate('country', 'name')
+            .populate('state', 'name abbreviation')
+            .populate('cluster', 'name')
+            .populate('districts', 'name');
         res.status(200).json(plans);
     } catch (error) {
         res.status(500).json({ message: error.message });
