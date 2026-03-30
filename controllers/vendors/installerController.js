@@ -234,7 +234,6 @@ export const getInstallerAgencyPlans = async (req, res) => {
         if (stateId) query.state = stateId;
         if (clusterId) query.cluster = clusterId;
 
-        // Handle both single districtId and multi-select districtIds
         if (districtIds) {
             const ids = districtIds.split(',');
             query.districts = { $in: ids };
@@ -281,6 +280,69 @@ export const deleteInstallerAgencyPlan = async (req, res) => {
         const deletedPlan = await InstallerAgencyPlan.findByIdAndDelete(id);
         if (!deletedPlan) return res.status(404).json({ message: 'Agency Plan not found' });
         res.status(200).json({ message: 'Agency Plan deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// --- Solar Installer Plan Controllers (Individual) ---
+
+import SolarInstallerPlan from '../../models/vendors/SolarInstallerPlan.js';
+
+export const getSolarInstallerPlans = async (req, res) => {
+    try {
+        const { countryId, stateId, clusterId, districtId, districtIds } = req.query;
+        let query = {};
+        if (countryId) query.country = countryId;
+        if (stateId) query.state = stateId;
+        if (clusterId) query.cluster = clusterId;
+
+        if (districtIds) {
+            const ids = districtIds.split(',');
+            query.districts = { $in: ids };
+        } else if (districtId) {
+            query.districts = districtId;
+        }
+
+        const plans = await SolarInstallerPlan.find(query)
+            .sort({ createdAt: 1 })
+            .populate('country', 'name')
+            .populate('state', 'name abbreviation')
+            .populate('cluster', 'name')
+            .populate('districts', 'name');
+        res.status(200).json(plans);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const createSolarInstallerPlan = async (req, res) => {
+    try {
+        const newPlan = new SolarInstallerPlan(req.body);
+        await newPlan.save();
+        res.status(201).json(newPlan);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+export const updateSolarInstallerPlan = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedPlan = await SolarInstallerPlan.findByIdAndUpdate(id, req.body, { new: true });
+        if (!updatedPlan) return res.status(404).json({ message: 'Plan not found' });
+        res.status(200).json(updatedPlan);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+export const deleteSolarInstallerPlan = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedPlan = await SolarInstallerPlan.findByIdAndDelete(id);
+        if (!deletedPlan) return res.status(404).json({ message: 'Plan not found' });
+        res.status(200).json({ message: 'Plan deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

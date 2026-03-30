@@ -19,7 +19,11 @@ import {
     getInstallerAgencyPlans,
     createInstallerAgencyPlan,
     updateInstallerAgencyPlan,
-    deleteInstallerAgencyPlan
+    deleteInstallerAgencyPlan,
+    getSolarInstallerPlans,
+    createSolarInstallerPlan,
+    updateSolarInstallerPlan,
+    deleteSolarInstallerPlan
 } from '../../controllers/vendors/installerController.js';
 
 const router = express.Router();
@@ -53,5 +57,11 @@ router.get('/agency-plans', getInstallerAgencyPlans);
 router.post('/agency-plans', createInstallerAgencyPlan);
 router.put('/agency-plans/:id', updateInstallerAgencyPlan);
 router.delete('/agency-plans/:id', deleteInstallerAgencyPlan);
+
+// Solar Installer Individual Plans
+router.get('/installer-plans', getSolarInstallerPlans);
+router.post('/installer-plans', createSolarInstallerPlan);
+router.put('/installer-plans/:id', updateSolarInstallerPlan);
+router.delete('/installer-plans/:id', deleteSolarInstallerPlan);
 
 export default router;
