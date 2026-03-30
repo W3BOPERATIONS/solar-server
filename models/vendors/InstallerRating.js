@@ -5,6 +5,10 @@ const installerRatingSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true
+    },
+    maxRating: {
+        type: Number,
+        default: 5
     }
 }, {
     timestamps: true

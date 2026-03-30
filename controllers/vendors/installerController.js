@@ -124,8 +124,15 @@ export const getInstallerRatings = async (req, res) => {
 
 export const createInstallerRating = async (req, res) => {
     try {
-        const newRating = new InstallerRating(req.body);
+        const { category, maxRating } = req.body;
+        const newRating = new InstallerRating({ category, maxRating });
         await newRating.save();
+        
+        // Update all other records with this maxRating if provided
+        if (maxRating !== undefined) {
+            await InstallerRating.updateMany({}, { maxRating });
+        }
+
         res.status(201).json(newRating);
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -135,8 +142,16 @@ export const createInstallerRating = async (req, res) => {
 export const updateInstallerRating = async (req, res) => {
     try {
         const { id } = req.params;
-        const updatedRating = await InstallerRating.findByIdAndUpdate(id, req.body, { new: true });
+        const { category, maxRating } = req.body;
+        
+        const updatedRating = await InstallerRating.findByIdAndUpdate(id, { category, maxRating }, { new: true });
         if (!updatedRating) return res.status(404).json({ message: 'Rating not found' });
+        
+        // Sync maxRating across all records
+        if (maxRating !== undefined) {
+            await InstallerRating.updateMany({}, { maxRating });
+        }
+
         res.status(200).json(updatedRating);
     } catch (error) {
         res.status(400).json({ message: error.message });

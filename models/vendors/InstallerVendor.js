@@ -39,6 +39,25 @@ const installerVendorSchema = new mongoose.Schema(
             enum: ['Active', 'Inactive'],
             default: 'Active',
         },
+        ratings: [{
+            category: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'InstallerRating',
+                required: true
+            },
+            value: {
+                type: Number,
+                min: 0,
+                max: 5,
+                required: true
+            }
+        }],
+        averageRating: {
+            type: Number,
+            default: 0,
+            min: 0,
+            max: 5
+        }
     },
     {
         timestamps: true,

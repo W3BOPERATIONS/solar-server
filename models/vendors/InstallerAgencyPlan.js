@@ -7,7 +7,7 @@ const installerAgencyPlanSchema = new mongoose.Schema({
     districts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'District' }],
     name: { type: String, required: true, trim: true },
     description: { type: String, default: '' },
-    minimumRating: { type: Number, default: 0 },
+    minimumRating: { type: Number, default: 0, min: 0, max: 5 },
     planColor: { type: String, default: '#0070cc' }, // For top banner branding
 
     // Eligibility Requirements
@@ -51,16 +51,33 @@ const installerAgencyPlanSchema = new mongoose.Schema({
         capacity: { type: String },
         daysRequiredUnit: { type: String, default: 'Weeks' },
         daysRequiredVal: { type: String },
+        timeRequiredUnit: { type: String, default: 'Weeks' },
+        timeRequiredVal: { type: String },
         active: { type: Boolean, default: false }
     }],
 
-    // Solar Installation Charges (Dynamic Table)
     solarInstallationCharges: [{
         category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
         subCategory: { type: mongoose.Schema.Types.ObjectId, ref: 'SubCategory' },
         projectType: { type: String },
         subProjectType: { type: mongoose.Schema.Types.ObjectId, ref: 'SubProjectType' },
-        chargesPerKw: { type: Number, default: 0 }
+        typeLabel: { type: String },
+        chargesPerKw: { type: Number, default: 0 },
+        active: { type: Boolean, default: false }
+    }],
+
+    // Solar Installation Points (Dynamic Table)
+    solarInstallationPoints: [{
+        category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
+        subCategory: { type: mongoose.Schema.Types.ObjectId, ref: 'SubCategory' },
+        projectType: { type: String },
+        subProjectType: { type: mongoose.Schema.Types.ObjectId, ref: 'SubProjectType' },
+        typeLabel: { type: String },
+        yearlyTargetKw: { type: Number, default: 0 },
+        points: { type: Number, default: 0 },
+        periodInMonth: { type: Number, default: 0 },
+        claimInMonth: { type: Number, default: 0 },
+        active: { type: Boolean, default: false }
     }],
 
 

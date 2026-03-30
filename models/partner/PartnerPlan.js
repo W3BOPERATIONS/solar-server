@@ -58,10 +58,21 @@ const partnerPlanSchema = new mongoose.Schema(
             type: Number,
             default: 0
         },
-        state: { // This is in FranchiseePlan but not explicitly required at plan level in DealerPlan, added for unification
+        country: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'State',
-            // required: true // Removed required for now to not break Dealer plans that lack state at the plan level
+            ref: 'Country'
+        },
+        state: { 
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'State'
+        },
+        cluster: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Cluster'
+        },
+        district: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'District'
         },
         isActive: {
             type: Boolean,
@@ -84,6 +95,12 @@ const partnerPlanSchema = new mongoose.Schema(
     {
         timestamps: true
     }
+);
+
+// Compound unique index to prevent duplicate plan names for the same location context and partner type
+partnerPlanSchema.index(
+    { partnerType: 1, country: 1, state: 1, cluster: 1, district: 1, name: 1 }, 
+    { unique: true }
 );
 
 export default mongoose.model('PartnerPlan', partnerPlanSchema);

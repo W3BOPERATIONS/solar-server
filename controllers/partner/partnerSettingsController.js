@@ -51,51 +51,85 @@ export const deletePartner = async (req, res) => {
 
 export const getPlans = async (req, res) => {
     try {
-        const { partnerType, stateId } = req.query;
+        const { partnerType, countryId, stateId, clusterId, districtId } = req.query;
         let query = { isActive: true };
         
         if (partnerType) query.partnerType = partnerType;
+        if (countryId) query.country = countryId;
         if (stateId) query.state = stateId;
+        if (clusterId) query.cluster = clusterId;
+        if (districtId) query.district = districtId;
 
-        let plans = await PartnerPlan.find(query).populate('state', 'name code');
+        let plans = await PartnerPlan.find(query)
+            .populate('country', 'name')
+            .populate('state', 'name code')
+            .populate('cluster', 'name')
+            .populate('district', 'name');
 
-        // We want to ensure that this partnerType/stateId combination 
-        // has EVERY plan template that exists in the system.
+        // Note: The template creation logic below assumes plans are at stateId level.
+        // If we want plans at district level, this logic needs refinement.
+        // For now, we only use template logic if stateId is provided.
         
-        // Find all unique plan models in the database to act as templates
-        const allSystemPlans = await PartnerPlan.find({ isActive: true });
-        const distinctPlans = [];
-        const uniqueNames = new Set();
-        
-        for (const p of allSystemPlans) {
-            if (!uniqueNames.has(p.name)) {
-                uniqueNames.add(p.name);
-                distinctPlans.push(p);
-            }
-        }
-
-        // Check for ALL plans (active or inactive) in the current context 
-        // to prevent re-creating a plan that was explicitly deleted (soft-deleted).
-        const allPlansInCurrentContext = await PartnerPlan.find({ partnerType, state: stateId });
-        const currentPlanNames = allPlansInCurrentContext.map(p => p.name);
-        
-        const missingPlans = distinctPlans.filter(p => !currentPlanNames.includes(p.name));
-        
-        if (missingPlans.length > 0 && partnerType && stateId) {
-            const newPlans = missingPlans.map(p => {
-                const obj = p.toObject();
-                // strip unique identifiers
-                delete obj._id;
-                delete obj.createdAt;
-                delete obj.updatedAt;
+        if (stateId && partnerType && plans.length === 0) {
+            // Find all unique plan names that exist in the system to use as templates
+            // This defines what plans "should" exist for any given partner/location
+            const allPlanNames = await PartnerPlan.distinct('name', { isActive: true });
+            
+            if (allPlanNames.length > 0) {
+                // Check if any plans (active OR inactive) already exist for this SPECIFIC context
+                // to avoid re-creating something that was already created or deleted.
+                const existingPlansInContext = await PartnerPlan.find({ 
+                    partnerType, 
+                    country: countryId || null, 
+                    state: stateId, 
+                    cluster: clusterId || null, 
+                    district: districtId || null 
+                });
                 
-                // reassign to current filter
-                obj.state = stateId;
-                obj.partnerType = partnerType;
-                return obj;
-            });
-            await PartnerPlan.insertMany(newPlans);
-            plans = await PartnerPlan.find(query).populate('state', 'name code');
+                const existingNames = existingPlansInContext.map(p => p.name);
+                const namesToCreate = allPlanNames.filter(name => !existingNames.includes(name));
+
+                if (namesToCreate.length > 0) {
+                    // Fetch the actual template objects for these names
+                    // We take one sample for each missing name
+                    const templates = await Promise.all(namesToCreate.map(name => 
+                        PartnerPlan.findOne({ name, isActive: true }).lean()
+                    ));
+
+                    const newPlans = templates.map(template => {
+                        const obj = { ...template };
+                        delete obj._id;
+                        delete obj.createdAt;
+                        delete obj.updatedAt;
+                        delete obj.__v;
+                        
+                        obj.country = countryId || null;
+                        obj.state = stateId;
+                        obj.cluster = clusterId || null;
+                        obj.district = districtId || null;
+                        obj.partnerType = partnerType;
+                        obj.isActive = true;
+                        return obj;
+                    });
+                    
+                    if (newPlans.length > 0) {
+                        try {
+                            await PartnerPlan.insertMany(newPlans, { ordered: false });
+                        } catch (error) {
+                            // If some already existed due to a race condition (index violation), 
+                            // we ignore it and continue since we're re-fetching anyway.
+                            console.warn('Duplicate plans prevented by index during template creation');
+                        }
+                        
+                        // Re-fetch to get the newly created plans or existing ones
+                        plans = await PartnerPlan.find(query)
+                            .populate('country', 'name')
+                            .populate('state', 'name code')
+                            .populate('cluster', 'name')
+                            .populate('district', 'name');
+                    }
+                }
+            }
         }
         res.status(200).json(plans);
     } catch (error) {

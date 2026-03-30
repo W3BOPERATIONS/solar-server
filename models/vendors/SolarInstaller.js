@@ -40,6 +40,25 @@ const solarInstallerSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'District',
         required: true
+    },
+    ratings: [{
+        category: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'InstallerRating',
+            required: true
+        },
+        value: {
+            type: Number,
+            min: 0,
+            max: 5,
+            required: true
+        }
+    }],
+    averageRating: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5
     }
 }, {
     timestamps: true
