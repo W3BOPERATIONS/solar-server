@@ -188,13 +188,22 @@ app.use((err, req, res, next) => {
 
   // Handle Mongoose Validation Error
   if (err.name === 'ValidationError') {
-    const messages = Object.values(err.errors).map(val => val.message);
+    const messages = Object.values(err.errors).map(val => {
+      // If it's a cast error inside validation, make it friendly
+      if (val.name === 'CastError') {
+        return `Please select a valid ${val.path || 'option'}`;
+      }
+      return val.message;
+    });
     return res.status(400).json({ success: false, message: messages.join(', ') });
   }
 
   // Handle Mongoose Cast Error (e.g., invalid ObjectID)
   if (err.name === 'CastError') {
-    return res.status(400).json({ success: false, message: `Invalid ${err.path}: ${err.value}` });
+    return res.status(400).json({ 
+      success: false, 
+      message: `Invalid selection for ${err.path}. Please fill in this field correctly.` 
+    });
   }
 
   // Handle Mongoose Duplicate Key Error

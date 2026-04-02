@@ -23,29 +23,29 @@ const orderProcurementSettingSchema = new mongoose.Schema(
     {
         category: {
             type: String,
-            required: true
+            required: [true, 'Please select a category']
         },
         subCategory: {
             type: String,
-            required: true
+            required: [true, 'Please select a sub-category']
         },
         projectType: {
             type: String,
-            required: true
+            required: [true, 'Please select a project type']
         },
         subProjectType: {
             type: String,
-            required: true
+            required: [true, 'Please select a sub-project type']
         },
         product: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Product',
-            required: true
+            required: [true, 'Please select a product']
         },
         brand: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'BrandManufacturer',
-            required: true
+            required: [true, 'Please select a brand']
         },
         paymentType: [{
             type: String,
@@ -54,7 +54,7 @@ const orderProcurementSettingSchema = new mongoose.Schema(
         skuSelectionOption: {
             type: String,
             enum: ['ComboKit', 'Customize'],
-            required: true,
+            required: [true, 'Please select a SKU selection option'],
             default: 'ComboKit'
         },
         skus: [{
