@@ -14,7 +14,9 @@ router.delete('/:id', campaignController.deleteCampaign);
 
 // Configuration routes
 router.get('/settings/config', campaignController.getCampaignConfig);
+router.get('/settings/config/list', campaignController.getAllCampaignConfigs);
 router.put('/settings/config', campaignController.updateCampaignConfig);
+router.delete('/settings/config/:id', campaignController.deleteCampaignConfig);
 
 // Social Media Platform routes
 router.get('/social/platforms', campaignController.getAllSocialCampaigns);

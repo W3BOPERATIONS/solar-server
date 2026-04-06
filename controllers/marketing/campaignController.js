@@ -126,8 +126,37 @@ export const getCampaignStats = async (req, res) => {
 // Configuration Controllers
 export const getCampaignConfig = async (req, res, next) => {
     try {
-        const config = await CampaignConfig.getOrCreate();
-        res.json({ success: true, data: config });
+        const { country, state, cluster, district, partnerType } = req.query;
+        let query = {};
+        if (country) query.country = country;
+        if (state) query.state = state;
+        if (cluster) query.cluster = cluster;
+        if (district) query.district = district;
+        if (partnerType) query.partnerType = partnerType;
+
+        const config = await CampaignConfig.findOne(query)
+            .populate('plans', 'name');
+            
+        res.json({ success: true, data: config || {
+            campaignTypes: ['company', 'CPRM'],
+            conversions: { 'company': 32, 'CPRM': 12 },
+            plans: []
+        } });
+    } catch (err) {
+        next(err || new Error('Internal Server Error'));
+    }
+};
+
+export const getAllCampaignConfigs = async (req, res, next) => {
+    try {
+        const configs = await CampaignConfig.find()
+            .populate('country', 'name')
+            .populate('state', 'name')
+            .populate('cluster', 'name clusterName')
+            .populate('district', 'name districtName')
+            .populate('plans', 'name')
+            .sort({ createdAt: -1 });
+        res.json({ success: true, data: configs });
     } catch (err) {
         next(err || new Error('Internal Server Error'));
     }
@@ -135,36 +164,70 @@ export const getCampaignConfig = async (req, res, next) => {
 
 export const updateCampaignConfig = async (req, res, next) => {
     try {
-        let config = await CampaignConfig.findOne();
+        const {
+            country,
+            state,
+            cluster,
+            district,
+            partnerType,
+            campaignTypes,
+            conversions,
+            cprmConversion,
+            companyConversion,
+            defaultCompanyBudget,
+            defaultCprmBudget,
+            plans
+        } = req.body;
+
+        // Try to update or create a record for this specific region/partner
+        let query = { country, state, cluster, district, partnerType };
+        
+        let config = await CampaignConfig.findOne(query);
+        
         if (!config) {
             config = new CampaignConfig(req.body);
         } else {
-            // Explicitly update all fields to ensure Mongoose tracks changes
-            const {
-                defaultNameFormat,
-                campaignTypes,
-                cprmConversion,
-                companyConversion,
-                defaultCompanyBudget,
-                defaultCprmBudget
-            } = req.body;
-
-            if (defaultNameFormat !== undefined) config.defaultNameFormat = defaultNameFormat;
+            // Update fields
+            if (campaignTypes) {
+                config.campaignTypes = campaignTypes;
+                config.markModified('campaignTypes');
+            }
+            if (conversions) {
+                config.conversions = conversions;
+                config.markModified('conversions');
+            }
             if (cprmConversion !== undefined) config.cprmConversion = cprmConversion;
             if (companyConversion !== undefined) config.companyConversion = companyConversion;
             if (defaultCompanyBudget !== undefined) config.defaultCompanyBudget = defaultCompanyBudget;
             if (defaultCprmBudget !== undefined) config.defaultCprmBudget = defaultCprmBudget;
-
-            if (campaignTypes && Array.isArray(campaignTypes)) {
-                config.campaignTypes = campaignTypes;
-                config.markModified('campaignTypes');
+            if (plans !== undefined) {
+                config.plans = plans;
+                config.markModified('plans');
             }
         }
+
         config.updatedBy = req.user?.id;
         await config.save();
-        res.json({ success: true, message: 'Settings updated successfully', data: config });
+        
+        // Return version with plans populated (if needed) or just IDs
+        const savedConfig = await CampaignConfig.findById(config._id)
+            .populate('plans', 'name');
+
+        res.json({ success: true, message: 'Settings updated successfully', data: savedConfig });
     } catch (err) {
         console.error('Update Config Error:', err);
+        next(err || new Error('Internal Server Error'));
+    }
+};
+
+export const deleteCampaignConfig = async (req, res, next) => {
+    try {
+        const config = await CampaignConfig.findByIdAndDelete(req.params.id);
+        if (!config) {
+            return res.status(404).json({ success: false, message: 'Configuration not found' });
+        }
+        res.json({ success: true, message: 'Configuration removed successfully' });
+    } catch (err) {
         next(err || new Error('Internal Server Error'));
     }
 };

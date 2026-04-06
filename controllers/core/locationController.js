@@ -136,7 +136,7 @@ export const getAllStates = async (req, res, next) => {
     const { countryId, isActive } = req.query;
     const query = {};
 
-    if (countryId) query.country = countryId;
+    if (countryId && countryId !== 'undefined' && countryId !== 'null') query.country = countryId;
     if (isActive !== undefined) query.isActive = isActive === 'true';
 
     const states = await State.find(query).populate('country').sort({ name: 1 });
@@ -379,10 +379,10 @@ export const getAllDistricts = async (req, res, next) => {
     const { stateId, countryId, clusterId, isActive } = req.query;
     const query = {};
 
-    if (stateId) query.state = stateId;
-    if (countryId) query.country = countryId;
+    if (stateId && stateId !== 'undefined' && stateId !== 'null') query.state = stateId;
+    if (countryId && countryId !== 'undefined' && countryId !== 'null') query.country = countryId;
     if (isActive !== undefined) query.isActive = isActive === 'true';
-    if (clusterId) {
+    if (clusterId && clusterId !== 'undefined' && clusterId !== 'null') {
       const cluster = await Cluster.findById(clusterId);
       if (cluster) {
         query._id = { $in: cluster.districts };
@@ -469,9 +469,9 @@ export const getAllClusters = async (req, res, next) => {
     const { districtId, stateId, countryId, isActive } = req.query;
     const query = {};
 
-    if (districtId) query.districts = districtId; // Matches if ID is in array
-    if (stateId) query.state = stateId;
-    if (countryId) query.country = countryId;
+    if (districtId && districtId !== 'undefined' && districtId !== 'null') query.districts = districtId; // Matches if ID is in array
+    if (stateId && stateId !== 'undefined' && stateId !== 'null') query.state = stateId;
+    if (countryId && countryId !== 'undefined' && countryId !== 'null') query.country = countryId;
     if (isActive !== undefined) query.isActive = isActive === 'true';
 
     const clusters = await Cluster.find(query).populate('districts state country').sort({ name: 1 });
@@ -553,9 +553,9 @@ export const getAllZones = async (req, res, next) => {
     const { clusterId, stateId, countryId, isActive } = req.query;
     const query = {};
 
-    if (clusterId) query.cluster = clusterId;
-    if (stateId) query.state = stateId;
-    if (countryId) query.country = countryId;
+    if (clusterId && clusterId !== 'undefined' && clusterId !== 'null') query.cluster = clusterId;
+    if (stateId && stateId !== 'undefined' && stateId !== 'null') query.state = stateId;
+    if (countryId && countryId !== 'undefined' && countryId !== 'null') query.country = countryId;
     if (isActive !== undefined) query.isActive = isActive === 'true';
 
     const zones = await Zone.find(query).populate('cluster districts state country').sort({ name: 1 });
