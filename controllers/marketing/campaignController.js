@@ -236,8 +236,10 @@ export const deleteCampaignConfig = async (req, res, next) => {
 export const getAllSocialCampaigns = async (req, res, next) => {
     try {
         const campaigns = await SocialMediaCampaign.find()
+            .populate('country')
             .populate('state')
             .populate('cluster')
+            .populate('district')
             .sort({ createdAt: -1 });
         res.json({ success: true, count: campaigns.length, data: campaigns });
     } catch (err) {
@@ -251,7 +253,7 @@ export const createSocialCampaign = async (req, res, next) => {
             ...req.body,
             createdBy: req.user?.id
         });
-        await campaign.populate(['state', 'cluster']);
+        await campaign.populate(['country', 'state', 'cluster', 'district']);
         res.status(201).json({ success: true, data: campaign });
     } catch (err) {
         next(err || new Error('Internal Server Error'));
@@ -264,7 +266,7 @@ export const updateSocialCampaign = async (req, res, next) => {
             req.params.id,
             req.body,
             { new: true, runValidators: true }
-        ).populate(['state', 'cluster']);
+        ).populate(['country', 'state', 'cluster', 'district']);
 
         if (!campaign) {
             return res.status(404).json({ success: false, message: 'Campaign not found' });

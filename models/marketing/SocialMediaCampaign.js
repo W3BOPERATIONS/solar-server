@@ -3,18 +3,23 @@ import mongoose from 'mongoose';
 const socialMediaCampaignSchema = new mongoose.Schema({
     platform: {
         type: String,
-        required: true,
-        enum: ['Facebook', 'Instagram', 'Twitter', 'LinkedIn', 'Google', 'Other']
+        required: true
+    },
+    country: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Country'
     },
     state: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'State',
-        required: true
+        ref: 'State'
     },
     cluster: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Cluster',
-        required: true
+        ref: 'Cluster'
+    },
+    district: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'District'
     },
     status: {
         type: String,
