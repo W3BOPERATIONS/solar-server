@@ -123,15 +123,22 @@ export const getCampaignStats = async (req, res) => {
     }
 };
 
+// Helper to sanitize IDs (convert '' or 'all' to null/undefined for Mongoose)
+const sanitizeId = (id) => {
+    if (!id || id === 'all' || id === '') return undefined;
+    if (typeof id === 'object' && id?._id) return id._id;
+    return id;
+};
+
 // Configuration Controllers
 export const getCampaignConfig = async (req, res, next) => {
     try {
         const { country, state, cluster, district, partnerType } = req.query;
         let query = {};
-        if (country) query.country = country;
-        if (state) query.state = state;
-        if (cluster) query.cluster = cluster;
-        if (district) query.district = district;
+        if (sanitizeId(country)) query.country = sanitizeId(country);
+        if (sanitizeId(state)) query.state = sanitizeId(state);
+        if (sanitizeId(cluster)) query.cluster = sanitizeId(cluster);
+        if (sanitizeId(district)) query.district = sanitizeId(district);
         if (partnerType) query.partnerType = partnerType;
 
         const config = await CampaignConfig.findOne(query)
@@ -180,14 +187,29 @@ export const updateCampaignConfig = async (req, res, next) => {
         } = req.body;
 
         // Try to update or create a record for this specific region/partner
-        let query = { country, state, cluster, district, partnerType };
+        let query = {};
+        if (sanitizeId(country)) query.country = sanitizeId(country);
+        if (sanitizeId(state)) query.state = sanitizeId(state);
+        if (sanitizeId(cluster)) query.cluster = sanitizeId(cluster);
+        if (sanitizeId(district)) query.district = sanitizeId(district);
+        if (partnerType) query.partnerType = partnerType;
         
         let config = await CampaignConfig.findOne(query);
         
         if (!config) {
-            config = new CampaignConfig(req.body);
+            // Remove _id from body to prevent duplicate key errors if frontend sent an old id
+            const cleanBody = { ...req.body };
+            delete cleanBody._id;
+            
+            // Clean region IDs in body
+            cleanBody.country = sanitizeId(cleanBody.country);
+            cleanBody.state = sanitizeId(cleanBody.state);
+            cleanBody.cluster = sanitizeId(cleanBody.cluster);
+            cleanBody.district = sanitizeId(cleanBody.district);
+
+            config = new CampaignConfig(cleanBody);
         } else {
-            // Update fields
+            // Update fields manually from req.body to avoid accidental _id update or invalid values
             if (campaignTypes) {
                 config.campaignTypes = campaignTypes;
                 config.markModified('campaignTypes');
@@ -249,8 +271,14 @@ export const getAllSocialCampaigns = async (req, res, next) => {
 
 export const createSocialCampaign = async (req, res, next) => {
     try {
+        const body = { ...req.body };
+        body.country = sanitizeId(body.country);
+        body.state = sanitizeId(body.state);
+        body.cluster = sanitizeId(body.cluster);
+        body.district = sanitizeId(body.district);
+
         const campaign = await SocialMediaCampaign.create({
-            ...req.body,
+            ...body,
             createdBy: req.user?.id
         });
         await campaign.populate(['country', 'state', 'cluster', 'district']);
@@ -262,9 +290,15 @@ export const createSocialCampaign = async (req, res, next) => {
 
 export const updateSocialCampaign = async (req, res, next) => {
     try {
+        const body = { ...req.body };
+        body.country = sanitizeId(body.country);
+        body.state = sanitizeId(body.state);
+        body.cluster = sanitizeId(body.cluster);
+        body.district = sanitizeId(body.district);
+
         const campaign = await SocialMediaCampaign.findByIdAndUpdate(
             req.params.id,
-            req.body,
+            body,
             { new: true, runValidators: true }
         ).populate(['country', 'state', 'cluster', 'district']);
 
