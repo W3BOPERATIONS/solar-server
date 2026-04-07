@@ -75,6 +75,20 @@ const setPriceSchema = new mongoose.Schema(
         cluster: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Cluster'
+        },
+        kitType: {
+            type: String,
+            enum: ['Custom Kit', 'Combo Kit'],
+            default: 'Custom Kit'
+        },
+        paymentType: {
+            type: String,
+            enum: ['Cash', 'Loan', 'EMI'],
+            default: 'Cash'
+        },
+        comboKit: {
+            type: String,
+            default: ''
         }
     },
     {

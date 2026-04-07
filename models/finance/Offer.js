@@ -69,7 +69,13 @@ const offerSchema = new mongoose.Schema(
         // It uses hardcoded objects.
         // I will stick to mixed schema or strings to support the transition.
 
+        // Category filtering support
+        category: String,
+        subCategory: String,
+        plans: [String],
+
         location: {
+            country: String,
             state: String,
             cluster: String,
             district: String
