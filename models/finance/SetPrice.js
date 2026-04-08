@@ -4,8 +4,7 @@ const setPriceSchema = new mongoose.Schema(
     {
         productType: {
             type: String,
-            required: true,
-            enum: ['Solar Panel', 'Inverter', 'Battery', 'Solar Water Heater', 'Solar Street Light', 'Solar Pump']
+            required: true
         },
         // Linking to other models for normalization if needed, but keeping text for flexibility as per requirement
         // In a strict relational model we would use ObjectIds, but based on the frontend it seems to use strings heavily.
@@ -64,6 +63,10 @@ const setPriceSchema = new mongoose.Schema(
         },
 
         // Location Specifics
+        country: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Country'
+        },
         state: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'State'

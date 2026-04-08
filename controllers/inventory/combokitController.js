@@ -196,7 +196,22 @@ export const createAMCPlan = async (req, res) => {
 
 export const getAMCPlans = async (req, res) => {
     try {
-        const plans = await AMCPlan.find()
+        const { state, cluster, district, category, subCategory, projectType, subProjectType } = req.query;
+        const filter = {};
+        if (district) {
+            filter.district = district;
+        } else if (cluster) {
+            filter.cluster = cluster;
+        } else if (state) {
+            filter.state = state;
+        }
+
+        if (category) filter.category = { $regex: new RegExp(`^${category}$`, 'i') };
+        if (subCategory) filter.subCategory = { $regex: new RegExp(`^${subCategory}$`, 'i') };
+        if (projectType) filter.projectType = { $regex: new RegExp(`^${projectType}$`, 'i') };
+        if (subProjectType) filter.subProjectType = { $regex: new RegExp(`^${subProjectType}$`, 'i') };
+
+        const plans = await AMCPlan.find(filter)
             .populate('state', 'name')
             .populate('cluster', 'name')
             .populate('district', 'name')
