@@ -18,8 +18,7 @@ export const createSetPrice = async (req, res) => {
 
 export const getSetPrices = async (req, res) => {
     try {
-        // Basic filter support
-        const { country, state, district, cluster, category, subCategory, paymentType, kitType, role, partnerPlan } = req.query;
+        const { country, state, district, cluster, category, subCategory, projectType, subProjectType, paymentType, kitType, role, partnerPlan } = req.query;
         const query = {};
         if (country) query.country = country;
         if (state) query.state = state; 
@@ -27,6 +26,8 @@ export const getSetPrices = async (req, res) => {
         if (cluster) query.cluster = cluster;
         if (category) query.category = category;
         if (subCategory) query.subCategory = subCategory;
+        if (projectType) query.projectType = projectType;
+        if (subProjectType) query.subProjectType = subProjectType;
         if (paymentType && paymentType !== 'All') query.paymentType = paymentType;
         if (kitType && kitType !== 'All') query.kitType = kitType;
         if (role) query.role = role;
