@@ -19,16 +19,18 @@ export const createSetPrice = async (req, res) => {
 export const getSetPrices = async (req, res) => {
     try {
         // Basic filter support
-        const { country, state, district, cluster, category, subCategory, paymentType, kitType } = req.query;
+        const { country, state, district, cluster, category, subCategory, paymentType, kitType, role, partnerPlan } = req.query;
         const query = {};
         if (country) query.country = country;
-        if (state) query.state = state; // Assuming frontend sends ID for now based on model or we adapt
+        if (state) query.state = state; 
         if (district) query.district = district;
         if (cluster) query.cluster = cluster;
         if (category) query.category = category;
         if (subCategory) query.subCategory = subCategory;
         if (paymentType && paymentType !== 'All') query.paymentType = paymentType;
         if (kitType && kitType !== 'All') query.kitType = kitType;
+        if (role) query.role = role;
+        if (partnerPlan) query.partnerPlan = partnerPlan;
 
         const prices = await SetPrice.find(query)
             .populate('country', 'name')

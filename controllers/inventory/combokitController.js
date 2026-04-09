@@ -376,7 +376,7 @@ export const createAssignment = async (req, res) => {
 
 export const getAssignments = async (req, res) => {
     try {
-        const { state, cluster, city, district, category, subCategory, subProjectType, projectType } = req.query;
+        const { state, cluster, city, district, category, subCategory, subProjectType, projectType, combokitId, kitName } = req.query;
         const filter = {};
         if (state) filter.state = state;
         if (cluster) filter.cluster = cluster;
@@ -386,11 +386,14 @@ export const getAssignments = async (req, res) => {
         if (subCategory) filter.subCategory = subCategory;
         if (subProjectType) filter.subProjectType = subProjectType;
         if (projectType) filter.projectType = projectType;
+        if (combokitId) filter.combokitId = combokitId;
+        if (kitName) filter['comboKits.name'] = kitName;
 
         const assignments = await ComboKitAssignment.find(filter)
             .populate('state', 'name')
             .populate('clusters', 'name')
-            .populate('districts', 'name');
+            .populate('districts', 'name')
+            .populate('combokitId', 'name');
         res.status(200).json(assignments);
     } catch (error) {
         console.error("Error fetching assignments:", error);
@@ -429,6 +432,64 @@ export const deleteAssignment = async (req, res) => {
         await ComboKitAssignment.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: 'Assignment deleted' });
     } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const getAllCombokits = async (req, res) => {
+    try {
+        const assignments = await ComboKitAssignment.find({}, 'comboKits');
+        const allKits = [];
+        const seenNames = new Set();
+        
+        assignments.forEach(assignment => {
+            if (assignment.comboKits && assignment.comboKits.length > 0) {
+                assignment.comboKits.forEach(kit => {
+                    // Collect all kits. Maybe deduplicate by name for the primary dropdown?
+                    // User says: adani combokit with panel test, tata combokit
+                    if (!seenNames.has(kit.name)) {
+                        allKits.push({
+                            id: kit._id,
+                            name: kit.name
+                        });
+                        seenNames.add(kit.name);
+                    }
+                });
+            }
+        });
+        
+        res.status(200).json(allKits);
+    } catch (error) {
+        console.error("Error fetching all combokits:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+export const getAllCustomizedCombokits = async (req, res) => {
+    try {
+        const assignments = await ComboKitAssignment.find({})
+            .populate('state', 'name')
+            .populate('clusters', 'name')
+            .populate('districts', 'name')
+            .populate('combokitId', 'name');
+        
+        // Map to a format useful for the dropdown
+        const result = assignments.map(a => ({
+            _id: a._id,
+            panels: a.panels || [],
+            inverters: a.inverters || [],
+            category: a.category,
+            subCategory: a.subCategory,
+            projectType: a.projectType,
+            subProjectType: a.subProjectType,
+            state: a.state,
+            districts: a.districts,
+            role: a.role || (a.cpTypes && a.cpTypes.length > 0 ? a.cpTypes[0] : ''),
+            solarkitName: a.solarkitName
+        }));
+        
+        res.status(200).json(result);
+    } catch (error) {
+        console.error("Error fetching all customized combokits:", error);
         res.status(500).json({ message: error.message });
     }
 };

@@ -16,6 +16,10 @@ const comboKitAssignmentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'District'
     }],
+    combokitId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'SolarKit'
+    },
     cpTypes: [{
         type: String
     }],

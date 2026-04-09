@@ -92,6 +92,19 @@ const setPriceSchema = new mongoose.Schema(
         comboKit: {
             type: String,
             default: ''
+        },
+        role: {
+            type: String,
+            default: ''
+        },
+        partnerPlan: {
+            type: mongoose.Schema.Types.ObjectId,
+            refPath: 'partnerPlanModel' // Dynamic ref might be needed if multiple models, or just ref a generic one
+        },
+        partnerPlanModel: {
+            type: String,
+            enum: ['DealerPlan', 'FranchiseePlan', 'ChannelPartnerPlan'],
+            default: 'DealerPlan'
         }
     },
     {

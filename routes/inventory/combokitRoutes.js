@@ -23,13 +23,19 @@ import {
     getAssignments,
     updateAssignment,
     deleteAssignment,
-    getPlansByRole
+    getPlansByRole,
+    getAllCombokits,
+    getAllCustomizedCombokits
 } from '../../controllers/inventory/combokitController.js';
 
 const router = express.Router();
 
 // Role Plans Route
 router.get('/plans', getPlansByRole);
+
+// ComboKit Global Fetch
+router.get('/all-combokits', getAllCombokits);
+router.get('/all-customized-combokits', getAllCustomizedCombokits);
 
 // SolarKit Routes
 router.post('/solarkits', createSolarKit);
