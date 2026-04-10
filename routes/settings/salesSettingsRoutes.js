@@ -16,7 +16,9 @@ import {
     getBundles,
     updateBundle,
     deleteBundle,
-    getDashboardStats
+    getDashboardStats,
+    getCompanyMargins,
+    updateCompanyMargin
 } from '../../controllers/settings/salesSettingsController.js';
 
 const router = express.Router();
@@ -47,5 +49,9 @@ router.post('/bundles', createBundle);
 router.get('/bundles', getBundles);
 router.put('/bundles/:id', updateBundle);
 router.delete('/bundles/:id', deleteBundle);
+
+// Company Margin Routes
+router.get('/company-margin', getCompanyMargins);
+router.put('/company-margin', updateCompanyMargin);
 
 export default router;

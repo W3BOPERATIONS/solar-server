@@ -2,6 +2,7 @@ import SetPrice from '../../models/finance/SetPrice.js';
 import SetPriceAmc from '../../models/finance/SetPriceAmc.js';
 import Offer from '../../models/finance/Offer.js';
 import SolarPanelBundle from '../../models/inventory/SolarPanelBundle.js';
+import CompanyMargin from '../../models/finance/CompanyMargin.js';
 
 // ==========================================
 // Set Price Logic
@@ -20,10 +21,25 @@ export const getSetPrices = async (req, res) => {
     try {
         const { country, state, district, cluster, category, subCategory, projectType, subProjectType, paymentType, kitType, role, partnerPlan } = req.query;
         const query = {};
-        if (country) query.country = country;
-        if (state) query.state = state; 
-        if (district) query.district = district;
-        if (cluster) query.cluster = cluster;
+        
+        // Flexible matching for locations (support both singular field and plural array field)
+        if (country) {
+            query.$or = query.$or || [];
+            query.$or.push({ country: country }, { countries: country });
+        }
+        if (state) {
+            query.$or = query.$or || [];
+            query.$or.push({ state: state }, { states: state });
+        }
+        if (district) {
+            query.$or = query.$or || [];
+            query.$or.push({ district: district }, { districts: district });
+        }
+        if (cluster) {
+            query.$or = query.$or || [];
+            query.$or.push({ cluster: cluster }, { clusters: cluster });
+        }
+
         if (category) query.category = category;
         if (subCategory) query.subCategory = subCategory;
         if (projectType) query.projectType = projectType;
@@ -243,13 +259,59 @@ export const getDashboardStats = async (req, res) => {
             { $group: { _id: null, total: { $sum: "$amcPrice" } } }
         ]);
 
+        // 5. Total Escalated Prices (Buying Price > Benchmark)
+        const escalatedPriceCount = await SetPrice.countDocuments({
+            $expr: { $gt: ["$marketPrice", "$benchmarkPrice"] }
+        });
+
         res.status(200).json({
             activeOffers: activeOffersCount,
             marginStats,
             bundleStats,
-            amcRevenuePotential: totalAmcPotential[0]?.total || 0
+            amcRevenuePotential: totalAmcPotential[0]?.total || 0,
+            escalatedPriceCount
         });
 
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// ==========================================
+// Company Margin Logic
+// ==========================================
+export const getCompanyMargins = async (req, res) => {
+    try {
+        let margins = await CompanyMargin.find().sort({ type: 1 });
+        
+        // Seed default values if none exist
+        if (margins.length === 0) {
+            const defaults = [
+                { type: 'Prime', cost: 500, margin: 1000, total: 1500 },
+                { type: 'Regular', cost: 400, margin: 800, total: 1200 },
+                { type: 'Other', cost: 300, margin: 500, total: 800 }
+            ];
+            margins = await CompanyMargin.insertMany(defaults);
+        }
+        
+        res.status(200).json(margins);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+export const updateCompanyMargin = async (req, res) => {
+    try {
+        const { type, cost, margin } = req.body;
+        const total = (Number(cost) || 0) + (Number(margin) || 0);
+        
+        const updated = await CompanyMargin.findOneAndUpdate(
+            { type },
+            { cost, margin, total },
+            { new: true, upsert: true }
+        );
+        
+        res.status(200).json(updated);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
