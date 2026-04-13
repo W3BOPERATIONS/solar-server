@@ -18,7 +18,7 @@ export const createQuoteSetting = async (req, res) => {
 
 export const getQuoteSettings = async (req, res) => {
     try {
-        const settings = await QuoteSettings.find();
+        const settings = await QuoteSettings.find().populate(['state', 'cluster', 'district']);
         res.status(200).json(settings);
     } catch (error) {
         res.status(500).json({ message: error.message });

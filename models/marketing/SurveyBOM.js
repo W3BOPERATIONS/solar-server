@@ -4,7 +4,7 @@ const surveyBOMSchema = new mongoose.Schema({
     quoteSettingsId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'QuoteSettings',
-        required: true
+        required: false
     },
     category: {
         type: String,
@@ -38,23 +38,15 @@ const surveyBOMSchema = new mongoose.Schema({
         type: Number,
         default: null
     },
-    pipes: [{
-        product: String,
-        formulaItem: String,
-        formulaQty: Number,
-        price: Number
-    }],
-    accessories: [{
-        product: String,
-        formulaItem: String,
-        formulaQty: Number,
-        price: Number
-    }],
-    wires: [{
-        product: String,
-        formulaItem: String,
-        formulaQty: Number,
-        price: Number
+    sections: [{
+        name: { type: String, required: true },
+        productLabel: { type: String, default: 'Product' },
+        rows: [{
+            product: String,
+            formulaItem: String,
+            formulaQty: Number,
+            price: Number
+        }]
     }],
     isActive: {
         type: Boolean,
