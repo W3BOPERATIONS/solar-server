@@ -206,10 +206,25 @@ export const createDiscom = async (req, res) => {
     }
 };
 
+export const getDiscoms = async (req, res) => {
+    try {
+        const filters = {};
+        if (req.query.country) filters.country = req.query.country;
+        if (req.query.state) filters.state = req.query.state;
+        if (req.query.cluster) filters.cluster = req.query.cluster;
+        if (req.query.district) filters.district = req.query.district;
+
+        const discoms = await Discom.find(filters).populate(['country', 'state', 'cluster', 'district']);
+        res.status(200).json(discoms);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 export const getDiscomsByState = async (req, res) => {
     try {
         const { stateId } = req.params;
-        const discoms = await Discom.find({ state: stateId });
+        const discoms = await Discom.find({ state: stateId }).populate(['country', 'state', 'cluster', 'district']);
         res.status(200).json(discoms);
     } catch (error) {
         res.status(500).json({ message: error.message });

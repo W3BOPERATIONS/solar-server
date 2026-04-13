@@ -1,10 +1,22 @@
 import mongoose from 'mongoose';
 
 const discomSchema = new mongoose.Schema({
+    country: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Country'
+    },
     state: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'State',
         required: true
+    },
+    cluster: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Cluster'
+    },
+    district: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'District'
     },
     name: {
         type: String,
