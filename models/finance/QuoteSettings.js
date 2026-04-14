@@ -162,6 +162,30 @@ const quoteSettingsSchema = new mongoose.Schema({
             alignment: { type: String, default: 'Center' }
         }
     },
+    advancedOptions: [{
+        key: { type: String }, // 'amc', 'insurance', etc.
+        enabled: { type: Boolean, default: false },
+        type: { type: String },
+        price: { type: Number, default: 0 },
+        description: { type: String }
+    }],
+    unitPrice: {
+        type: Number,
+        default: 7.5
+    },
+    packageImage: {
+        type: String
+    },
+    bomData: {
+        items: [{ label: String, value: String }],
+        pipes: [{ panels: String, kw: String, size1: String, size2: String }],
+        heightNote: { type: String }
+    },
+    monthlyIsolation: [{
+        month: String,
+        isolation: Number,
+        total: Number
+    }],
     isActive: {
         type: Boolean,
         default: true
