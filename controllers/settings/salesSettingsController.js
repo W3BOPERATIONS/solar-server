@@ -24,20 +24,24 @@ export const getSetPrices = async (req, res) => {
         
         // Flexible matching for locations (support both singular field and plural array field)
         if (country) {
+            const ids = country.includes(',') ? country.split(',') : [country];
             query.$or = query.$or || [];
-            query.$or.push({ country: country }, { countries: country });
+            query.$or.push({ country: { $in: ids } }, { countries: { $in: ids } });
         }
         if (state) {
+            const ids = state.includes(',') ? state.split(',') : [state];
             query.$or = query.$or || [];
-            query.$or.push({ state: state }, { states: state });
+            query.$or.push({ state: { $in: ids } }, { states: { $in: ids } });
         }
         if (district) {
+            const ids = district.includes(',') ? district.split(',') : [district];
             query.$or = query.$or || [];
-            query.$or.push({ district: district }, { districts: district });
+            query.$or.push({ district: { $in: ids } }, { districts: { $in: ids } });
         }
         if (cluster) {
+            const ids = cluster.includes(',') ? cluster.split(',') : [cluster];
             query.$or = query.$or || [];
-            query.$or.push({ cluster: cluster }, { clusters: cluster });
+            query.$or.push({ cluster: { $in: ids } }, { clusters: { $in: ids } });
         }
 
         if (category) query.category = category;

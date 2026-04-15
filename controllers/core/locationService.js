@@ -17,7 +17,11 @@ class LocationService {
      */
     async getDistrictsByState(stateId) {
         const query = { isActive: true };
-        if (stateId && stateId !== 'all') query.state = stateId;
+        if (stateId && stateId !== 'all') {
+            const val = typeof stateId === 'object' ? (stateId._id || stateId.id || String(stateId)) : String(stateId);
+            const ids = val.includes(',') ? val.split(',') : [val];
+            query.state = { $in: ids.filter(id => id && id !== '[object Object]') };
+        }
         return await District.find(query).sort({ name: 1 });
     }
 
@@ -26,7 +30,11 @@ class LocationService {
      */
     async getClustersByDistrict(districtId) {
         const query = { isActive: true };
-        if (districtId && districtId !== 'all') query.districts = districtId; // Mongoose handles ID in array automatically
+        if (districtId && districtId !== 'all') {
+            const val = typeof districtId === 'object' ? (districtId._id || districtId.id || String(districtId)) : String(districtId);
+            const ids = val.includes(',') ? val.split(',') : [val];
+            query.districts = { $in: ids.filter(id => id && id !== '[object Object]') };
+        }
         return await Cluster.find(query).sort({ name: 1 });
     }
 
@@ -35,7 +43,11 @@ class LocationService {
      */
     async getClustersByState(stateId) {
         const query = { isActive: true };
-        if (stateId && stateId !== 'all') query.state = stateId;
+        if (stateId && stateId !== 'all') {
+            const val = typeof stateId === 'object' ? (stateId._id || stateId.id || String(stateId)) : String(stateId);
+            const ids = val.includes(',') ? val.split(',') : [val];
+            query.state = { $in: ids.filter(id => id && id !== '[object Object]') };
+        }
         return await Cluster.find(query).sort({ name: 1 });
     }
 
@@ -43,12 +55,16 @@ class LocationService {
      * Get districts by cluster
      */
     async getDistrictsByCluster(clusterId) {
-        if (clusterId === 'all') {
+        if (!clusterId || clusterId === 'all') {
             return await District.find({ isActive: true }).sort({ name: 1 });
         }
-        const cluster = await Cluster.findById(clusterId);
-        if (!cluster) return [];
-        return await District.find({ _id: { $in: cluster.districts }, isActive: true }).sort({ name: 1 });
+        const val = typeof clusterId === 'object' ? (clusterId._id || clusterId.id || String(clusterId)) : String(clusterId);
+        const ids = val.includes(',') ? val.split(',') : [val];
+        const clusters = await Cluster.find({ _id: { $in: ids.filter(id => id && id !== '[object Object]') } });
+        if (!clusters || clusters.length === 0) return [];
+        
+        const allDistrictIds = clusters.reduce((acc, c) => [...acc, ...c.districts], []);
+        return await District.find({ _id: { $in: [...new Set(allDistrictIds)] }, isActive: true }).sort({ name: 1 });
     }
 
     /**
@@ -56,7 +72,11 @@ class LocationService {
      */
     async getZonesByCluster(clusterId) {
         const query = { isActive: true };
-        if (clusterId && clusterId !== 'all') query.clusters = clusterId;
+        if (clusterId && clusterId !== 'all') {
+            const val = typeof clusterId === 'object' ? (clusterId._id || clusterId.id || String(clusterId)) : String(clusterId);
+            const ids = val.includes(',') ? val.split(',') : [val];
+            query.clusters = { $in: ids.filter(id => id && id !== '[object Object]') };
+        }
         return await Zone.find(query).sort({ name: 1 });
     }
 
@@ -65,7 +85,11 @@ class LocationService {
      */
     async getCitiesByDistrict(districtId) {
         const query = { isActive: true };
-        if (districtId && districtId !== 'all') query.district = districtId;
+        if (districtId && districtId !== 'all') {
+            const val = typeof districtId === 'object' ? (districtId._id || districtId.id || String(districtId)) : String(districtId);
+            const ids = val.includes(',') ? val.split(',') : [val];
+            query.district = { $in: ids.filter(id => id && id !== '[object Object]') };
+        }
         return await City.find(query).sort({ name: 1 });
     }
 

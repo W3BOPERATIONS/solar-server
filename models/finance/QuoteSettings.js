@@ -1,54 +1,29 @@
 import mongoose from 'mongoose';
 
 const quoteSettingsSchema = new mongoose.Schema({
-    country: {
+    countries: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Country',
-        required: true
-    },
-    state: {
+        ref: 'Country'
+    }],
+    states: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'State',
-        required: true
-    },
-    cluster: {
+        ref: 'State'
+    }],
+    clusters: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Cluster',
-        required: true
-    },
-    district: {
+        ref: 'Cluster'
+    }],
+    districts: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'District',
-        required: true
-    },
-    category: {
-        type: String,
-        required: true
-    },
-    subCategory: {
-        type: String,
-        required: true
-    },
-    projectType: {
-        type: String,
-        required: true
-    },
-    subProjectType: {
-        type: String,
-        required: true
-    },
-    quoteType: {
-        type: String,
-        required: true
-    },
-    partnerType: {
-        type: String,
-        required: true
-    },
-    planType: {
-        type: String,
-        required: true
-    },
+        ref: 'District'
+    }],
+    categories: [String],
+    subCategories: [String],
+    projectTypes: [String],
+    subProjectTypes: [String],
+    quoteTypes: [String],
+    partnerTypes: [String],
+    planTypes: [String],
     solarSettings: {
         projectKW: { type: Number, default: 0 },
         unitPerKW: { type: Number, default: 0 }
@@ -81,14 +56,8 @@ const quoteSettingsSchema = new mongoose.Schema({
         additionalCharges: { type: Boolean, default: true },
         finalTotal: { type: Boolean, default: true }
     },
-    kitType: {
-        type: String,
-        default: 'Combo Kit'
-    },
-    paymentMode: {
-        type: String,
-        default: 'Cash'
-    },
+    kitTypes: [String],
+    paymentModes: [String],
     generationSummary: {
         type: Boolean,
         default: true

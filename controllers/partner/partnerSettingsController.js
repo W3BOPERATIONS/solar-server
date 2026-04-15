@@ -55,10 +55,22 @@ export const getPlans = async (req, res) => {
         let query = { isActive: true };
         
         if (partnerType) query.partnerType = partnerType;
-        if (countryId) query.country = countryId;
-        if (stateId) query.state = stateId;
-        if (clusterId) query.cluster = clusterId;
-        if (districtId) query.district = districtId;
+        if (countryId) {
+            const ids = countryId.includes(',') ? countryId.split(',') : [countryId];
+            query.country = { $in: ids };
+        }
+        if (stateId) {
+            const ids = stateId.includes(',') ? stateId.split(',') : [stateId];
+            query.state = { $in: ids };
+        }
+        if (clusterId) {
+            const ids = clusterId.includes(',') ? clusterId.split(',') : [clusterId];
+            query.cluster = { $in: ids };
+        }
+        if (districtId) {
+            const ids = districtId.includes(',') ? districtId.split(',') : [districtId];
+            query.district = { $in: ids };
+        }
 
         let plans = await PartnerPlan.find(query)
             .populate('country', 'name')
