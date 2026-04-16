@@ -34,10 +34,17 @@ const quoteSettingsSchema = new mongoose.Schema({
         total: Number
     }],
     selectedPages: [String],
+    allPages: [{
+        id: String,
+        label: String,
+        value: String,
+        description: String
+    }],
     colorSettings: {
         brandColor: { type: Boolean, default: false },
         backgroundColor: { type: Boolean, default: false },
-        pageSequence: { type: Boolean, default: false }
+        pageSequence: { type: Boolean, default: false },
+        pageOrder: [String]
     },
     fieldSettings: {
         proposalNo: { type: Boolean, default: true },
@@ -155,6 +162,15 @@ const quoteSettingsSchema = new mongoose.Schema({
         isolation: Number,
         total: Number
     }],
+    pricingData: {
+        totalCost: { type: Number, default: 0 },
+        mnreSubsidy: { type: Number, default: 0 },
+        stateSubsidy: { type: Number, default: 0 },
+        additionalCharges: { type: Number, default: 0 },
+        netCost: { type: Number, default: 0 }
+    },
+    inflationRate: { type: Number, default: 0 },
+    degradationRate: { type: Number, default: 0 },
     isActive: {
         type: Boolean,
         default: true
