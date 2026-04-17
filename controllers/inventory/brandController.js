@@ -181,7 +181,7 @@ export const getAllSuppliers = async (req, res) => {
             .populate('manufacturer', 'companyName brand')
             .sort({ createdAt: -1 });
 
-        res.status(200).json(suppliers);
+        res.status(200).json({ success: true, count: suppliers.length, data: suppliers });
     } catch (error) {
         console.error('Error fetching suppliers:', error);
         res.status(500).json({ message: 'Server error fetching suppliers', error: error.message });
