@@ -4,14 +4,50 @@ import TerraceType from '../../models/projects/TerraceType.js';
 import StructureType from '../../models/projects/StructureType.js';
 import BuildingType from '../../models/projects/BuildingType.js';
 import Discom from '../../models/finance/Discom.js';
+import Counter from '../../models/core/Counter.js';
+import District from '../../models/core/District.js';
 
 // --- Quote Settings ---
 export const createQuoteSetting = async (req, res) => {
     try {
-        const newSetting = new QuoteSettings(req.body);
+        // --- PROPOSAL NUMBER GENERATION ---
+        // 1. Get Sequence Number
+        const counter = await Counter.findOneAndUpdate(
+            { id: 'quoteProposalNo' },
+            { $inc: { seq: 1 } },
+            { new: true, upsert: true }
+        );
+        const sequence = counter.seq.toString().padStart(4, '0');
+
+        // 2. Get City Code (3 chars from first district)
+        let cityCode = 'GEN';
+        if (req.body.districts && req.body.districts.length > 0) {
+            const districtDoc = await District.findById(req.body.districts[0]);
+            if (districtDoc) {
+                cityCode = districtDoc.name.substring(0, 3).toUpperCase();
+            }
+        }
+
+        // 3. Get Dealer/Franchise Code (Condensed)
+        let partnerCode = 'DL';
+        if (req.body.partnerTypes && req.body.partnerTypes.length > 0) {
+            const pType = req.body.partnerTypes[0].toUpperCase();
+            if (pType.includes('FRANCHISE')) partnerCode = 'FR';
+            else if (pType.includes('DEALER')) partnerCode = 'DL';
+            else if (pType.includes('CHANNEL')) partnerCode = 'CP';
+        }
+
+        // 4. Build Final Condensed Number: SK/{CITY}/{DL}{SEQ}
+        const proposalNo = `SK/${cityCode}/${partnerCode}${sequence}`;
+       
+        const newSetting = new QuoteSettings({
+            ...req.body,
+            proposalNo: proposalNo
+        });
         const savedSetting = await newSetting.save();
         res.status(201).json(savedSetting);
     } catch (error) {
+        console.error('Create Quote Error:', error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -27,6 +63,14 @@ export const getQuoteSettings = async (req, res) => {
 
 export const updateQuoteSetting = async (req, res) => {
     try {
+        // Prevent changing proposalNo if it exists
+        if (req.body.proposalNo) {
+            const existing = await QuoteSettings.findById(req.params.id);
+            if (existing && existing.proposalNo) {
+                delete req.body.proposalNo; // Force keep original
+            }
+        }
+        
         const updatedSetting = await QuoteSettings.findByIdAndUpdate(req.params.id, req.body, { new: true });
         res.status(200).json(updatedSetting);
     } catch (error) {

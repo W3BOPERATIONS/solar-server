@@ -1,6 +1,10 @@
 import mongoose from 'mongoose';
 
 const quoteSettingsSchema = new mongoose.Schema({
+    proposalNo: {
+        type: String,
+        unique: true
+    },
     countries: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Country'
