@@ -207,3 +207,90 @@ export const getFranchiseManagerPerformance = (req, res) => getPerformanceData(r
 export const getFranchiseePerformance = (req, res) => getPerformanceData(req, res, 'franchisee');
 export const getDealerManagerPerformance = (req, res) => getPerformanceData(req, res, 'dealer_manager');
 export const getDealerPerformance = (req, res) => getPerformanceData(req, res, 'dealer');
+
+// ==================== EMPLOYEE PERFORMANCE & PENALTY LOGIC ====================
+import { getApplicableSetting, calculateUserEfficiency } from '../../utils/statusCalculator.js';
+import OverdueTaskSetting from '../../models/approvals/OverdueTaskSetting.js';
+
+export const getEmployeePerformance = async (req, res, next) => {
+    try {
+        const { departmentId, stateId, timeline } = req.query;
+        
+        let query = { role: 'employee' };
+        if (departmentId) query.department = departmentId;
+        if (stateId) query.state = stateId;
+
+        const users = await User.find(query)
+            .populate('department', 'name')
+            .populate('state', 'name')
+            .lean();
+
+        const userIds = users.map(u => u._id);
+
+        // Fetch projects for these users to count overdue tasks
+        // For efficiency, we count tasks where status would be 'overdue'
+        // In a real system, we'd probably have an 'OverdueHistory' or similar, 
+        // but as per requirement 'dynamic calculation' - we'll calculate based on current month's projects.
+        
+        const startOfMonth = moment().startOf('month').toDate();
+        const projects = await Project.find({
+            $or: [
+                { createdBy: { $in: userIds } },
+                { dealerId: { $in: userIds } } // Assuming dealerId might be the assignee for some
+            ],
+            createdAt: { $gte: startOfMonth }
+        }).lean();
+
+        // Fetch settings - we might need separate settings per user if they are in different regions,
+        // but for a summary, we typically use the global or a specific filtered setting.
+        const settings = await OverdueTaskSetting.find().lean();
+        
+        const performanceData = users.map(user => {
+            // Count overdue tasks for this user
+            const userProjects = projects.filter(p => 
+                p.createdBy?.toString() === user._id.toString() || 
+                p.dealerId?.toString() === user._id.toString()
+            );
+
+            // Find applicable setting for this user
+            const userSetting = settings.find(s => 
+                s.states?.some(sid => sid.toString() === user.state?._id?.toString()) ||
+                s.departments?.some(did => did.toString() === user.department?._id?.toString())
+            ) || settings.find(s => s.countries?.length === 0) || {}; // Fallback to global
+
+            let overdueCount = 0;
+            userProjects.forEach(p => {
+                const today = moment().startOf('day');
+                const due = moment(p.dueDate).startOf('day');
+                if (due.isBefore(today)) overdueCount++;
+            });
+
+            const efficiencyMetrics = calculateUserEfficiency(overdueCount, userSetting);
+
+            return {
+                id: user._id,
+                name: user.name,
+                department: user.department?.name || 'General',
+                overdueTasks: overdueCount,
+                efficiency: efficiencyMetrics.efficiency,
+                penaltyDeducted: efficiencyMetrics.totalPenalty,
+                benchmark: efficiencyMetrics.benchmark,
+                status: efficiencyMetrics.isBelowBenchmark ? 'Risk' : 'Good'
+            };
+        });
+
+        res.json({
+            success: true,
+            data: performanceData,
+            stats: {
+                totalEmployees: users.length,
+                belowBenchmark: performanceData.filter(p => p.status === 'Risk').length,
+                averageEfficiency: performanceData.length > 0 ? 
+                    (performanceData.reduce((s, p) => s + p.efficiency, 0) / performanceData.length).toFixed(1) : 0
+            }
+        });
+
+    } catch (err) {
+        next(err);
+    }
+};

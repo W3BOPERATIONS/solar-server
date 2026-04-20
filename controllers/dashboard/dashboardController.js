@@ -5,6 +5,8 @@ import Installation from '../../models/projects/Installation.js';
 import Statistics from '../../models/admin/Statistics.js';
 import Product from '../../models/inventory/Product.js';
 import mongoose from 'mongoose';
+import OverdueTaskSetting from '../../models/approvals/OverdueTaskSetting.js';
+import { calculateTaskStatus } from '../../utils/statusCalculator.js';
 
 export const getAdminDashboard = async (req, res) => {
   try {
@@ -268,21 +270,26 @@ export const getDeliveryDashboard = async (req, res) => {
     const pendingFilter = { ...filter, status: { $nin: ['delivered', 'cancelled', 'returned'] } };
     const pendingTotal = await Delivery.countDocuments(pendingFilter);
 
-    // Urgent: Pending and Scheduled Date is today or past
-    const urgentFilter = {
-      ...pendingFilter,
-      scheduledDate: { $lte: new Date(new Date().setDate(new Date().getDate() + 2)) } // Due within 2 days
-    };
-    const urgentCount = await Delivery.countDocuments(urgentFilter);
+    const globalSettings = await OverdueTaskSetting.findOne({ 
+      districts: { $size: 0 }, 
+      clusters: { $size: 0 }, 
+      states: { $size: 0 }, 
+      countries: { $size: 0 },
+      departments: { $size: 0 }
+    }) || { todayTasksDays: 0, pendingMinDays: 1, pendingMaxDays: 7 };
 
-    // Overdue: Pending and Scheduled Date is in past
-    const overdueFilter = {
-      ...pendingFilter,
-      scheduledDate: { $lt: new Date() }
-    };
-    const overdueCount = await Delivery.countDocuments(overdueFilter);
+    const activeDeliveries = await Delivery.find(pendingFilter);
 
-    const normalPending = pendingTotal - urgentCount; // Simplify for now
+    let urgentCount = 0;
+    let overdueCount = 0;
+    let normalPending = 0;
+
+    activeDeliveries.forEach(d => {
+      const status = calculateTaskStatus(d.scheduledDate, globalSettings);
+      if (status === 'overdue') overdueCount++;
+      else if (status === 'pending') urgentCount++; // Using 'urgent' to map to 'Pending' in this dashboard's terminology
+      else normalPending++;
+    });
 
     // 3. Efficiency & Cost (Aggregation)
     const statsAggregation = await Delivery.aggregate([

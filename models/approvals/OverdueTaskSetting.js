@@ -35,11 +35,18 @@ const overdueTaskSettingSchema = new mongoose.Schema({
         type: Number,
         default: 1
     },
-    escalationLevels: {
-        level1: { type: Boolean, default: true },
-        level2: { type: Boolean, default: true },
-        level3: { type: Boolean, default: false }
-    },
+    escalationLevels: [{
+        level: Number,
+        name: String,
+        fromDay: { type: Number, required: true },
+        toDay: { type: Number }, // If null, means 'and above'
+        escalateTo: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Designation'
+        },
+        penaltyPercentage: { type: Number, default: 0 },
+        isActive: { type: Boolean, default: true }
+    }],
     autoPenalty: {
         type: Boolean,
         default: true
@@ -51,19 +58,30 @@ const overdueTaskSettingSchema = new mongoose.Schema({
     overdueBenchmark: {
         type: Number,
         default: 70
-    }
+    },
+    countries: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Country'
+    }],
+    states: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'State'
+    }],
+    clusters: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Cluster'
+    }],
+    districts: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'District'
+    }],
+    departments: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Department'
+    }]
 }, {
     timestamps: true
 });
-
-// Ensure only one document exists
-overdueTaskSettingSchema.statics.getSettings = async function () {
-    let settings = await this.findOne();
-    if (!settings) {
-        settings = await this.create({});
-    }
-    return settings;
-};
 
 const OverdueTaskSetting = mongoose.model('OverdueTaskSetting', overdueTaskSettingSchema);
 export default OverdueTaskSetting;

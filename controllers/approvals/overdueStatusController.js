@@ -270,38 +270,39 @@ const DEFAULT_DEPARTMENT_DATA = {
 
 export const getOverdueStatusSettings = async (req, res) => {
     try {
-        const { department, state, city } = req.query;
+        const { country, state, cluster, district, departments, positions } = req.query;
+
+        const query = {};
+        if (country) query.countries = { $in: country.split(',') };
+        if (state) query.states = { $in: state.split(',') };
+        if (cluster) query.clusters = { $in: cluster.split(',') };
+        if (district) query.districts = { $in: district.split(',') };
+        if (departments) query.departments = { $in: departments.split(',') };
+        if (positions) query.positions = { $in: positions.split(',') };
 
         // Try to find specific settings
-        let settings = await OverdueStatusSetting.findOne({
-            department,
-            state,
-            city
-        });
+        let settings = await OverdueStatusSetting.findOne(query);
 
-        // If not found, use default data structure for that department
+        // If not found, use default structure
         if (!settings) {
-            const defaultData = DEFAULT_DEPARTMENT_DATA[department];
-            if (defaultData) {
-                // Return default structure but don't save yet
-                return res.status(200).json(defaultData);
-            } else {
-                // Return a generic default structure for any other department
-                return res.status(200).json({
-                    modules: [{
-                        id: 1,
-                        name: "General Module",
-                        overdueDays: 5,
-                        status: "Active",
-                        tasks: [{
-                            id: 1,
-                            name: "General Task",
-                            overdueDays: 2,
-                            status: "Active"
-                        }]
+            // Find just by first department for legacy defaults if needed
+            const deptName = departments ? departments.split(',')[0] : null;
+            const defaultData = DEFAULT_DEPARTMENT_DATA[deptName];
+            
+            return res.status(200).json(defaultData || {
+                modules: [{
+                    id: 'gen_module',
+                    name: "General Module",
+                    overdueDays: 5,
+                    status: "Active",
+                    tasks: [{
+                        id: 'gen_task',
+                        name: "General Task",
+                        overdueDays: 2,
+                        status: "Active"
                     }]
-                });
-            }
+                }]
+            });
         }
 
         res.status(200).json(settings);
@@ -312,17 +313,47 @@ export const getOverdueStatusSettings = async (req, res) => {
 
 export const updateOverdueStatusSettings = async (req, res) => {
     try {
-        const { department, state, city, modules } = req.body;
+        const { location, modules } = req.body;
+        const { countries, states, clusters, districts, departments, positions } = location || {};
 
+        // Find existing setting for this exact location combination if it exists, or create new
+        // For simplicity in this complex multi-select, we'll use a match logic
         const settings = await OverdueStatusSetting.findOneAndUpdate(
-            { department, state, city },
-            { department, state, city, modules },
+            { 
+                countries: { $all: countries || [] },
+                states: { $all: states || [] },
+                clusters: { $all: clusters || [] },
+                districts: { $all: districts || [] },
+                departments: { $all: departments || [] },
+                positions: { $all: positions || [] }
+            },
+            { 
+               countries, states, clusters, districts, departments, positions,
+               modules 
+            },
             { new: true, upsert: true, setDefaultsOnInsert: true }
         );
 
         res.status(200).json(settings);
     } catch (error) {
+        console.error("Update error:", error);
         res.status(400).json({ message: error.message });
+    }
+};
+
+export const getAllOverdueStatusSettings = async (req, res) => {
+    try {
+        const settings = await OverdueStatusSetting.find()
+            .populate('countries', 'name')
+            .populate('states', 'name')
+            .populate('clusters', 'name')
+            .populate('districts', 'name')
+            .populate('departments', 'name')
+            .populate('positions', 'name');
+            
+        res.status(200).json(settings);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };
 

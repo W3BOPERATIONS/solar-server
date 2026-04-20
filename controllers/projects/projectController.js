@@ -1,7 +1,10 @@
+import moment from 'moment';
 import Project from '../../models/projects/Project.js';
 import State from '../../models/core/State.js';
 import Cluster from '../../models/core/Cluster.js';
 import User from '../../models/users/User.js';
+import OverdueTaskSetting from '../../models/approvals/OverdueTaskSetting.js';
+import { calculateTaskStatus } from '../../utils/statusCalculator.js';
 
 // ==================== PROJECT CONTROLLERS ====================
 
@@ -48,23 +51,28 @@ export const getAllProjects = async (req, res, next) => {
             .populate('cluster', 'name h')
             .sort({ createdAt: -1 });
 
+        // Fetch settings once for better performance (Global fallback always)
+        const globalSettings = await OverdueTaskSetting.findOne({ 
+            districts: { $size: 0 }, 
+            clusters: { $size: 0 }, 
+            states: { $size: 0 }, 
+            countries: { $size: 0 },
+            departments: { $size: 0 }
+        }) || { todayTasksDays: 0, pendingMinDays: 1, pendingMaxDays: 7 };
+
         // Calculate overdue days for each project
         const projectsWithOverdue = projects.map(project => {
-            const today = new Date();
-            const due = new Date(project.dueDate);
-            const diffTime = today - due;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-            // If diffDays > 0, it is overdue. If <= 0, it is not.
-            // But logic in frontend was: if overdue -> red text.
-            // Let's pass overdueDays.
-
-            const isOverdue = diffDays > 0;
+            const status = calculateTaskStatus(project.dueDate, globalSettings);
+            
+            const today = moment().startOf('day');
+            const due = moment(project.dueDate).startOf('day');
+            const diffDays = today.diff(due, 'days');
 
             return {
                 ...project.toObject(),
-                overdueDays: isOverdue ? diffDays : 0,
-                isOverdue
+                overdueDays: status === 'overdue' ? Math.max(0, diffDays) : 0,
+                isOverdue: status === 'overdue',
+                taskStatusTag: status
             };
         });
 
@@ -103,31 +111,33 @@ export const getProjectStats = async (req, res, next) => {
             query.dealerId = req.user.id;
         }
 
+        const globalSettings = await OverdueTaskSetting.findOne({ 
+            districts: { $size: 0 }, 
+            clusters: { $size: 0 }, 
+            states: { $size: 0 }, 
+            countries: { $size: 0 },
+            departments: { $size: 0 }
+        }) || { todayTasksDays: 0, pendingMinDays: 1, pendingMaxDays: 7 };
+
         const allProjects = await Project.find(query);
 
         const total = allProjects.length;
-        // Logic for "In Progress": statusStage is NOT 'completed' (assuming 'commission' or similar is completed?)
-        // Or specific logic.
-        // Let's assume 'commission' is completed?
-        // Frontend used: "Completed" -> 65% completion.
-        // Let's define: In Progress = All - Completed.
-        // Statuses from frontend: consumer, application, feasibility, metercharge, vendor, work, install, pcr, commission, meterchange, inspection, subsidyreq, subsidydis.
-        // Maybe 'subsidydis' is completed? or 'commission'?
-
-        // For now, let's look for exact status matches if possible.
-        // Assuming 'Commissioning' or 'Subsidy Disbursal' might be completion.
-        // Let's count 'completed' as those with statusStage 'commission' or later?
-        // Actually, let's just count based on some flag or specific status list.
-
         const completedCount = allProjects.filter(p => ['commission', 'subsidydis', 'completed'].includes(p.statusStage)).length;
         const inProgressCount = total - completedCount;
 
-        // Overdue: based on dueDate
-        const today = new Date();
-        const overdueCount = allProjects.filter(p => {
-            const due = new Date(p.dueDate);
-            return due < today && !['commission', 'subsidydis', 'completed'].includes(p.statusStage);
-        }).length;
+        // Statistics based on settings
+        let overdueCount = 0;
+        let pendingCount = 0;
+        let todayCount = 0;
+
+        allProjects.forEach(p => {
+            if (['commission', 'subsidydis', 'completed'].includes(p.statusStage)) return;
+            
+            const status = calculateTaskStatus(p.dueDate, globalSettings);
+            if (status === 'overdue') overdueCount++;
+            else if (status === 'pending') pendingCount++;
+            else if (status === 'today') todayCount++;
+        });
 
         // Stage-wise counts breakdown
         const stageCounts = allProjects.reduce((acc, p) => {
@@ -143,6 +153,8 @@ export const getProjectStats = async (req, res, next) => {
                 inProgress: inProgressCount,
                 completed: completedCount,
                 overdue: overdueCount,
+                pending: pendingCount, // New field
+                today: todayCount, // New field
                 stageCounts // New field with breakdown
             }
         });

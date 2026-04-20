@@ -157,12 +157,48 @@ export const getEmployees = async (req, res, next) => {
 
         // Let's fetch performance for these users.
         const employeeIds = employees.map(e => e._id);
-        const performances = await import('../../models/users/UserPerformance.js').then(m => m.default.find({ user: { $in: employeeIds } }).lean());
+        
+        // Fetch applicable settings
+        const settings = await import('../../models/approvals/OverdueTaskSetting.js').then(m => m.default.find().lean());
+        const { calculateUserEfficiency } = await import('../../utils/statusCalculator.js');
+
+        // Fetch current month's projects to count overdue tasks
+        const moment = (await import('moment')).default;
+        const startOfMonth = moment().startOf('month').toDate();
+        const projects = await import('../../models/projects/Project.js').then(m => m.default.find({
+            $or: [{ createdBy: { $in: employeeIds } }, { dealerId: { $in: employeeIds } }],
+            createdAt: { $gte: startOfMonth }
+        }).lean());
+
+        // Fetch performance for initial stats (working days, etc.)
+        const performances = await import('../../models/users/UserPerformance.js').then(m => m.default.find({ userId: { $in: employeeIds } }).lean());
 
         const data = employees.map(emp => {
-            const perf = performances.find(p => p.user.toString() === emp._id.toString()) || {};
+            const perf = performances.find(p => p.userId?.toString() === emp._id.toString()) || {};
+            
+            // Count overdue tasks dynamically
+            const userProjects = projects.filter(p => 
+                p.createdBy?.toString() === emp._id.toString() || 
+                p.dealerId?.toString() === emp._id.toString()
+            );
+
+            let overdueCount = 0;
+            userProjects.forEach(p => {
+                const today = moment().startOf('day');
+                const due = moment(p.dueDate).startOf('day');
+                if (due.isBefore(today)) overdueCount++;
+            });
+
+            // Find applicable setting
+            const userSetting = settings.find(s => 
+                s.states?.some(sid => sid.toString() === emp.state?.toString()) ||
+                s.departments?.some(did => did.toString() === emp.department?._id?.toString())
+            ) || settings.find(s => s.countries?.length === 0) || {};
+
+            const metrics = calculateUserEfficiency(overdueCount, userSetting);
 
             return {
+                id: emp._id,
                 name: emp.name,
                 department: emp.department?.name || 'N/A',
                 cluster: emp.cluster || 'N/A',
@@ -170,13 +206,16 @@ export const getEmployees = async (req, res, next) => {
                 joiningDate: emp.createdAt ? new Date(emp.createdAt).toISOString().split('T')[0] : 'N/A',
                 workingDays: perf.workingDays || 0,
                 absentDays: perf.absentDays || 0,
-                efficiency: perf.efficiency || 0,
+                efficiency: metrics.efficiency,
+                penaltyDeducted: metrics.totalPenalty,
+                benchmark: metrics.benchmark,
                 productivity: perf.productivity || 0,
-                overdueTasks: perf.overdueTasks || 0
+                overdueTasks: overdueCount,
+                status: metrics.isBelowBenchmark ? 'Risk' : 'Good'
             };
         });
 
-        console.log(`Backend: Fetched ${data.length} employees`);
+        console.log(`Backend: Fetched ${data.length} employees with dynamic performance`);
 
         res.json({
             success: true,
