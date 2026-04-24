@@ -8,7 +8,18 @@ export const getLoanRules = async (req, res) => {
         if (clusterId && clusterId !== 'undefined') {
             query.clusterId = clusterId;
         }
-        const rules = await LoanRule.find(query);
+        const rules = await LoanRule.find(query)
+            .populate('categoryId', 'name')
+            .populate('subCategoryId', 'name')
+            .populate('projectTypeId', 'name')
+            .populate('subProjectTypeId', 'name')
+            .populate('combokitId', 'name')
+            .populate('customizedKitId', 'solarkitName')
+            .populate('loanProviderId', 'name')
+            .populate('countries', 'name')
+            .populate('states', 'name')
+            .populate('clusters', 'name')
+            .populate('districts', 'name');
         res.status(200).json(rules);
     } catch (error) {
         console.error('GET /api/loan Error:', error);
@@ -18,38 +29,72 @@ export const getLoanRules = async (req, res) => {
 
 export const createLoanRule = async (req, res) => {
     try {
-        const { clusterId, projectType, interestRate, tenureMonths, maxAmount, fields } = req.body;
+        const {
+            clusterId, loanProviderType, orderType, combokitId, customizedKitId,
+            loanProviderId,
+            categoryId, subCategoryId, projectTypeId, subProjectTypeId,
+            projectTypeFrom, projectTypeTo,
+            countries, states, clusters, districts,
+            projectType, interestRate, tenureMonths, maxAmount, fields
+        } = req.body;
 
-        // Normalize projectType for consistent checking
-        const normalizedPT = projectType.charAt(0).toUpperCase() + projectType.slice(1).toLowerCase();
-
-        // Prevent duplicates for same project type in same cluster (or global)
+        // Prevent duplicates for same configuration
         const query = {
-            projectType: normalizedPT
+            loanProviderType,
+            orderType,
+            combokitId: combokitId || null,
+            customizedKitId: customizedKitId || null,
+            loanProviderId: loanProviderId || null,
+            categoryId: categoryId || null,
+            subCategoryId: subCategoryId || null,
+            projectTypeId: projectTypeId || null,
+            subProjectTypeId: subProjectTypeId || null,
+            projectTypeFrom: projectTypeFrom || undefined,
+            projectTypeTo: projectTypeTo || undefined,
+            countries: { $all: countries || [], $size: (countries || []).length },
+            states: { $all: states || [], $size: (states || []).length },
+            clusters: { $all: clusters || [], $size: (clusters || []).length },
+            districts: { $all: districts || [], $size: (districts || []).length }
         };
 
         if (clusterId && clusterId !== 'undefined') {
             query.clusterId = clusterId;
-        } else {
-            // Check for both null and missing clusterId to be safe
-            query.$or = [
-                { clusterId: null },
-                { clusterId: { $exists: false } }
-            ];
         }
 
         const existing = await LoanRule.findOne(query);
         if (existing) {
-            return res.status(400).json({ message: `Loan rule for ${normalizedPT} already exists` });
+            existing.fields = fields;
+            existing.outcomes = req.body.outcomes || [];
+            existing.interestRate = interestRate || 0;
+            existing.tenureMonths = tenureMonths || 0;
+            existing.maxAmount = maxAmount || 0;
+            await existing.save();
+            return res.status(200).json(existing);
         }
 
         const newRule = new LoanRule({
             clusterId: clusterId && clusterId !== 'undefined' ? clusterId : null,
-            projectType: normalizedPT,
+            loanProviderType,
+            orderType,
+            combokitId,
+            customizedKitId,
+            loanProviderId,
+            categoryId,
+            subCategoryId,
+            projectTypeId,
+            subProjectTypeId,
+            projectTypeFrom,
+            projectTypeTo,
+            countries,
+            states,
+            clusters,
+            districts,
+            projectType,
             interestRate: interestRate || 0,
             tenureMonths: tenureMonths || 0,
             maxAmount: maxAmount || 0,
-            fields: fields || [],
+            fields,
+            outcomes: req.body.outcomes || [],
             status: 'active'
         });
 
@@ -69,10 +114,6 @@ export const updateLoanRule = async (req, res) => {
     try {
         const { id } = req.params;
         const data = req.body;
-
-        if (data.projectType) {
-            data.projectType = data.projectType.charAt(0).toUpperCase() + data.projectType.slice(1).toLowerCase();
-        }
 
         const updatedRule = await LoanRule.findByIdAndUpdate(id, data, { new: true });
 

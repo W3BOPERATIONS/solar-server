@@ -37,6 +37,7 @@ import franchiseeManagerSettingRoutes from './routes/franchiseeManager/franchise
 import buyLeadSettingRoutes from './routes/settings/buyLeadSettingRoutes.js';
 import checklistRoutes from './routes/settings/checklistRoutes.js';
 import loanRoutes from './routes/finance/loanRoutes.js';
+import loanProviderRoutes from './routes/finance/loanProviderRoutes.js';
 import performanceRoutes from './routes/performance/performanceRoutes.js';
 import loanApplicationRoutes from './routes/finance/loanApplicationRoutes.js';
 import statisticsRoutes from './routes/performance/statisticsRoutes.js';
@@ -143,6 +144,7 @@ app.use('/api/franchisee-manager-settings', franchiseeManagerSettingRoutes);
 app.use('/api/buy-lead-settings', buyLeadSettingRoutes);
 app.use('/api/checklist', checklistRoutes);
 app.use('/api/loan', loanRoutes);
+app.use('/api/loan-providers', loanProviderRoutes);
 app.use('/api/performance', performanceRoutes);
 app.use('/api/loan-applications', loanApplicationRoutes);
 app.use('/api/statistics', statisticsRoutes);
