@@ -10,9 +10,12 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  // Ignore background polling or specific silent requests if passed via config in the future
-  if (!config.silent) {
+  const method = (config.method || 'get').toLowerCase();
+  const shouldShowLoader = config.showLoader ?? !['get', 'head', 'options'].includes(method);
+
+  if (!config.silent && shouldShowLoader) {
     useLoaderStore.getState().startRequest();
+    config.__showLoader = true;
   }
 
   const token = authStore.getState().token;
@@ -21,19 +24,21 @@ api.interceptors.request.use((config) => {
   }
   return config;
 }, (error) => {
-  useLoaderStore.getState().endRequest();
+  if (error.config?.__showLoader) {
+    useLoaderStore.getState().endRequest();
+  }
   return Promise.reject(error);
 });
 
 api.interceptors.response.use(
   (response) => {
-    if (!response.config?.silent) {
+    if (response.config?.__showLoader) {
       useLoaderStore.getState().endRequest();
     }
     return response;
   },
   (error) => {
-    if (!error.config?.silent) {
+    if (error.config?.__showLoader) {
       useLoaderStore.getState().endRequest();
     }
 

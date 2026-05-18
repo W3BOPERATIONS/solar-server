@@ -15,4 +15,4 @@ services:
       - key: JWT_SECRET
         sync: false
       - key: FRONTEND_URL
-        value: https://frabjous-sherbet-c11932.netlify.app
+        value: https://solarkits.netlify.app

@@ -1,6 +1,6 @@
+headersOrigin = "config"
 redirectsOrigin = "config"
 plugins = []
-headers = []
 
 [functions]
 
@@ -27,17 +27,17 @@ base = "C:\\Users\\gn17g\\OneDrive\\Desktop\\solar\\solar\\solar-client"
 
 [build.services]
 
-[[redirects]]
-from = "/api/*"
-to = "https://solar-server-e1havm3q1-trazys-projects-ba0590d8.vercel.app/api/:splat"
-status = 200.0
-force = false
+[[headers]]
+for = "/assets/*"
 
-[redirects.query]
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
 
-[redirects.conditions]
+[[headers]]
+for = "/*.html"
 
-[redirects.headers]
+[headers.values]
+Cache-Control = "public, max-age=0, must-revalidate"
 
 [[redirects]]
 from = "/*"
