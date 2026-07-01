@@ -915,8 +915,14 @@ import LoanApplication from '../../models/finance/LoanApplication.js';
 import DeliveryType from '../../models/orders/DeliveryType.js';
 import Vehicle from '../../models/orders/Vehicle.js';
 
+let createOrderPageDataCache = null;
+
 export const getCreateOrderPageData = async (req, res) => {
   try {
+    if (createOrderPageDataCache) {
+      return res.status(200).json({ success: true, data: createOrderPageDataCache });
+    }
+
     const clusters = await Cluster.find({ isActive: true }).populate('districts state country');
     const districts = await District.find({ isActive: true }).populate('state country');
     const states = await State.find({ isActive: true }).populate('country');
@@ -1021,16 +1027,16 @@ export const getCreateOrderPageData = async (req, res) => {
 
     // Hardcoded 10 seeded orders for demo
     let tableData = [
-        { cpName: 'Super Admin', customer: 'Green Energy Setup', kw: 10, price: '85,000', payment: 'Bank Transfer', orderNo: 'ORD0001', status: 'Pending', solarPanelInventory: 50, loanNumber: '--', loanAmount: '--', bankName: '--' },
-        { cpName: 'Super Admin', customer: 'EcoPower Industrial', kw: 3, price: '2,50,000', payment: 'UPI', orderNo: 'ORD0002', status: 'Pending', solarPanelInventory: 50, loanNumber: '--', loanAmount: '--', bankName: '--' },
-        { cpName: 'Super Admin', customer: 'SolarTech Commercial', kw: 9, price: '1,25,000', payment: 'Card', orderNo: 'ORD0003', status: 'Pending', solarPanelInventory: 50, loanNumber: '--', loanAmount: '--', bankName: '--' },
-        { cpName: 'Solar Partners LLC', customer: 'SunRise Apartments', kw: 5, price: '2,10,000', payment: 'Bank Transfer', orderNo: 'ORD0004', status: 'Pending', solarPanelInventory: 50, loanNumber: '--', loanAmount: '--', bankName: '--' },
-        { cpName: 'Solar Partners LLC', customer: 'Apex Manufacturing', kw: 15, price: '6,50,000', payment: 'Cheque', orderNo: 'ORD0005', status: 'Pending', solarPanelInventory: 50, loanNumber: '--', loanAmount: '--', bankName: '--' },
-        { cpName: 'Green Tech India', customer: 'Bright Future School', kw: 8, price: '3,20,000', payment: 'UPI', orderNo: 'ORD0006', status: 'Pending', solarPanelInventory: 50, loanNumber: '--', loanAmount: '--', bankName: '--' },
-        { cpName: 'Green Tech India', customer: 'Global Logistics Hub', kw: 20, price: '8,90,000', payment: 'Bank Transfer', orderNo: 'ORD0007', status: 'Pending', solarPanelInventory: 50, loanNumber: '--', loanAmount: '--', bankName: '--' },
-        { cpName: 'Eco Power Solutions', customer: 'Harmony Residency', kw: 4, price: '1,80,000', payment: 'Card', orderNo: 'ORD0008', status: 'Pending', solarPanelInventory: 50, loanNumber: '--', loanAmount: '--', bankName: '--' },
-        { cpName: 'Eco Power Solutions', customer: 'City Mall Rooftop', kw: 25, price: '11,00,000', payment: 'Bank Transfer', orderNo: 'ORD0009', status: 'Pending', solarPanelInventory: 50, loanNumber: '--', loanAmount: '--', bankName: '--' },
-        { cpName: 'Super Admin', customer: 'TechPark Innovations', kw: 12, price: '5,00,000', payment: 'Cheque', orderNo: 'ORD0010', status: 'Pending', solarPanelInventory: 50, loanNumber: '--', loanAmount: '--', bankName: '--' },
+        { cpName: 'Super Admin', customer: 'Green Energy Setup', kw: 10, price: '85,000', payment: 'Bank Transfer', orderNo: 'ORD0001', status: 'Pending', solarPanelInventory: 50, loanNumber: '--', loanAmount: '--', bankName: '--', bosKit: 'Generic Kit', labelNumber: 'LBL-001', panel: 'Waaree 540W', inverter: 'Growatt 10kW' },
+        { cpName: 'Super Admin', customer: 'EcoPower Industrial', kw: 3, price: '2,50,000', payment: 'UPI', orderNo: 'ORD0002', status: 'Pending', solarPanelInventory: 50, loanNumber: '--', loanAmount: '--', bankName: '--', bosKit: 'Premium Kit', labelNumber: 'LBL-002', panel: 'Adani 500W', inverter: 'GoodWe 3kW' },
+        { cpName: 'Super Admin', customer: 'SolarTech Commercial', kw: 9, price: '1,25,000', payment: 'Card', orderNo: 'ORD0003', status: 'Pending', solarPanelInventory: 50, loanNumber: '--', loanAmount: '--', bankName: '--', bosKit: 'Standard Kit', labelNumber: 'LBL-003', panel: 'Tata 550W', inverter: 'Sungrow 10kW' },
+        { cpName: 'Solar Partners LLC', customer: 'SunRise Apartments', kw: 5, price: '2,10,000', payment: 'Bank Transfer', orderNo: 'ORD0004', status: 'Pending', solarPanelInventory: 50, loanNumber: '--', loanAmount: '--', bankName: '--', bosKit: 'Economy Kit', labelNumber: 'LBL-004', panel: 'Vikram 540W', inverter: 'Luminous 5kW' },
+        { cpName: 'Solar Partners LLC', customer: 'Apex Manufacturing', kw: 15, price: '6,50,000', payment: 'Cheque', orderNo: 'ORD0005', status: 'Pending', solarPanelInventory: 50, loanNumber: '--', loanAmount: '--', bankName: '--', bosKit: 'Pro Kit', labelNumber: 'LBL-005', panel: 'Waaree 550W', inverter: 'Huawei 15kW' },
+        { cpName: 'Green Tech India', customer: 'Bright Future School', kw: 8, price: '3,20,000', payment: 'UPI', orderNo: 'ORD0006', status: 'Pending', solarPanelInventory: 50, loanNumber: '--', loanAmount: '--', bankName: '--', bosKit: 'Universal Kit', labelNumber: 'LBL-006', panel: 'Adani 540W', inverter: 'Solis 8kW' },
+        { cpName: 'Green Tech India', customer: 'Global Logistics Hub', kw: 20, price: '8,90,000', payment: 'Bank Transfer', orderNo: 'ORD0007', status: 'Pending', solarPanelInventory: 50, loanNumber: '--', loanAmount: '--', bankName: '--', bosKit: 'Premium Kit', labelNumber: 'LBL-007', panel: 'Tata 500W', inverter: 'Fronius 20kW' },
+        { cpName: 'Eco Power Solutions', customer: 'Harmony Residency', kw: 4, price: '1,80,000', payment: 'Card', orderNo: 'ORD0008', status: 'Pending', solarPanelInventory: 50, loanNumber: '--', loanAmount: '--', bankName: '--', bosKit: 'Standard Kit', labelNumber: 'LBL-008', panel: 'Vikram 550W', inverter: 'SMA 4kW' },
+        { cpName: 'Eco Power Solutions', customer: 'City Mall Rooftop', kw: 25, price: '11,00,000', payment: 'Bank Transfer', orderNo: 'ORD0009', status: 'Pending', solarPanelInventory: 50, loanNumber: '--', loanAmount: '--', bankName: '--', bosKit: 'Pro Kit', labelNumber: 'LBL-009', panel: 'Waaree 540W', inverter: 'Growatt 25kW' },
+        { cpName: 'Super Admin', customer: 'TechPark Innovations', kw: 12, price: '5,00,000', payment: 'Cheque', orderNo: 'ORD0010', status: 'Pending', solarPanelInventory: 50, loanNumber: '--', loanAmount: '--', bankName: '--', bosKit: 'Generic Kit', labelNumber: 'LBL-010', panel: 'Adani 550W', inverter: 'Sungrow 12kW' },
     ];
 
     // Fetch Project Types for Dropdowns
@@ -1110,6 +1116,8 @@ export const getCreateOrderPageData = async (req, res) => {
       inventoryVendors,
       tableData
     };
+
+    createOrderPageDataCache = data;
 
     res.status(200).json({ success: true, data });
   } catch (error) {
